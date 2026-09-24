@@ -430,6 +430,10 @@ label.lbl{display:grid;gap:6px;font-size:.86rem;color:#4A4744}
 .savebar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:55;background:#2F3A52;color:#fff;border-radius:999px;padding:6px 6px 6px 18px;display:flex;align-items:center;gap:8px;box-shadow:0 10px 30px rgba(20,25,40,.28);font-size:.88rem;width:max-content;max-width:calc(100% - 24px)}
 .savebar .btn{min-height:40px;font-size:.84rem;padding:0 1em}
 .size-pick{margin:0}
+.size-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (min-width:560px){.size-grid{grid-template-columns:repeat(5,1fr)}}
+.size-grid label{display:grid;gap:3px;font-size:.76rem;color:var(--gris)}
+.size-grid .input{min-height:40px;padding:6px 8px;text-align:center}
 .size-pick select{max-width:220px}
 .size-pick a{color:var(--azul-hondo)}
 .line-size{display:inline-block;font-size:.8rem;color:var(--gris);margin-left:.4em}
@@ -882,6 +886,12 @@ const RING_SIZES = Array.from({ length: 20 }, (_, i) => String(i + 1));
 const needsSize = (p) => p.ringSizes === true || (p.ringSizes == null && /anillo/.test(norm(catName(p.category))));
 const lineKey = (l) => l.id + '~' + (l.size || '');
 const cartQty = (id) => S.cart.filter((l) => l.id === id).reduce((a, l) => a + l.qty, 0);
+const cartQtySize = (id, size) => S.cart.filter((l) => l.id === id && (l.size || '') === size).reduce((a, l) => a + l.qty, 0);
+const hasSizeStock = (p) => !!(p.sizeStock && typeof p.sizeStock === 'object');
+// Piezas de una talla según el inventario que puso la administradora
+const sizeAvail = (p, size) => (hasSizeStock(p) ? (Number(p.sizeStock[size]) || 0) : (p.stock | 0));
+const sizesInStock = (p) => RING_SIZES.filter((n) => sizeAvail(p, n) > 0);
+const sizeSum = (ss) => Object.values(ss || {}).reduce((a, v) => a + (Number(v) || 0), 0);
 const waNumber = () => { const d = txt('whatsapp').replace(/\D/g, ''); return d.length === 10 ? '52' + d : (d.length >= 11 ? d : WHATSAPP); };
 const igUser = () => txt('instagram').replace(/^@/, '').trim() || 'buenasvibras_8';
 const waLink = (text) => `https://wa.me/${waNumber()}?text=${encodeURIComponent(text)}`;
@@ -1236,7 +1246,10 @@ function renderProduct() {
   const out = isOut(p);
   const inCart = cartQty(p.id);
   const sized = needsSize(p);
-  const maxQty = Math.max(1, (p.stock | 0) - inCart);
+  if (sized && S.pdSize && !sizesInStock(p).includes(S.pdSize)) S.pdSize = '';
+  const maxQty = sized && S.pdSize
+    ? Math.max(1, Math.min(sizeAvail(p, S.pdSize) - cartQtySize(p.id, S.pdSize), (p.stock | 0) - inCart))
+    : Math.max(1, (p.stock | 0) - inCart);
   S.pdQty = Math.min(S.pdQty, maxQty);
   const fav = S.favs.includes(p.id);
   const low = !out && p.stock <= 3 ? ` (${p.stock === 1 ? 'queda 1' : 'quedan ' + p.stock})` : '';
@@ -1264,7 +1277,7 @@ function renderProduct() {
         ${p.details ? `<div class="pd-details">${esc(p.details)}</div>` : ''}
         ${out ? `<a class="btn btn-wa" href="${waLink('Hola, ¿volverán a tener esta pieza? ' + p.name + '\n' + productUrl(p.id))}" target="_blank" rel="noopener"><i data-lucide="message-circle"></i>Preguntar si vuelve</a>` : `
         ${sized ? `<label class="lbl size-pick">Talla del anillo
-          <select class="input" id="pdSize"><option value="">Elige tu talla</option>${RING_SIZES.map((n) => `<option value="${n}"${S.pdSize === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
+          <select class="input" id="pdSize"><option value="">Elige tu talla</option>${sizesInStock(p).map((n) => { const left = sizeAvail(p, n) - cartQtySize(p.id, n); return `<option value="${n}"${S.pdSize === n ? ' selected' : ''}${left <= 0 ? ' disabled' : ''}>${n}${left <= 0 ? ' (ya en tu carrito)' : ''}</option>`; }).join('')}</select>
           <span class="muted">¿No sabes tu talla? <a href="${waLink('Hola, ¿me ayudan a saber mi talla de anillo? Me interesa: ' + p.name)}" target="_blank" rel="noopener">Pregúntanos por WhatsApp</a></span>
         </label>` : ''}
         <div class="buy-row">
@@ -1281,7 +1294,7 @@ function renderProduct() {
           <button class="btn btn-line btn-sm" data-act="fav" data-id="${p.id}" aria-pressed="${fav}"><i data-lucide="heart"></i>${fav ? 'En favoritos' : 'Guardar'}</button>
         </div>
         ${S.admin ? `<div class="admin-note"><i data-lucide="shield-check"></i><div style="flex:1">
-          <div style="margin-bottom:8px">Stock: <b>${p.stock}</b>${p.available === false ? ', marcada como vendida' : ''}</div>
+          <div style="margin-bottom:8px">Inventario: <b>${p.stock}</b>${p.available === false ? ', marcada como vendida' : ''}${hasSizeStock(p) && sized ? `<br>Por talla: ${sizesInStock(p).map((n) => `${n} (${sizeAvail(p, n)})`).join(', ') || 'ninguna'}` : ''}</div>
           <div class="pd-links">
             <button class="btn btn-dark btn-sm" data-act="edit" data-id="${p.id}"><i data-lucide="pencil"></i>Editar</button>
             <button class="btn btn-line btn-sm" data-act="toggle-sold" data-id="${p.id}">${out ? 'Reactivar' : 'Marcar vendida'}</button>
@@ -1371,7 +1384,10 @@ function cartLines() {
     let qty = l.qty;
     if (ok) {
       qty = Math.min(l.qty, Math.max(0, p.stock - (used[p.id] || 0)));
+      if (l.size) qty = Math.min(qty, Math.max(0, sizeAvail(p, l.size) - (used[p.id + '~' + l.size] || 0)));
+      if (needsSize(p) && hasSizeStock(p) && !l.size) qty = 0;
       used[p.id] = (used[p.id] || 0) + qty;
+      if (l.size) used[p.id + '~' + l.size] = (used[p.id + '~' + l.size] || 0) + qty;
       ok = qty > 0;
     }
     return { id: l.id, size: l.size || '', key: lineKey(l), p, qty: ok ? qty : l.qty, ok };
@@ -1388,7 +1404,10 @@ function addToCart(id, qty = 1, size = '') {
     setTimeout(() => { const sel = $('#pdSize'); if (sel) sel.focus(); }, 350);
     return false;
   }
-  const add = Math.min(qty, p.stock - cartQty(id));
+  let room = p.stock - cartQty(id);
+  if (size) room = Math.min(room, sizeAvail(p, size) - cartQtySize(id, size));
+  const add = Math.min(qty, room);
+  if (add <= 0 && size) { toast(`Ya no hay más en talla ${size}`, 'info'); return false; }
   if (add <= 0) { toast(`Solo hay ${p.stock} ${p.stock === 1 ? 'pieza disponible' : 'piezas disponibles'}`, 'info'); return false; }
   const line = S.cart.find((l) => l.id === id && (l.size || '') === size);
   if (line) line.qty += add; else S.cart.push(size ? { id, qty: add, size } : { id, qty: add });
@@ -1432,7 +1451,7 @@ function renderCart() {
         ${l.ok ? `<div><div class="qty">
           <button data-act="qty" data-key="${esc(l.key)}" data-d="-1" aria-label="Quitar uno"${l.qty <= 1 ? ' disabled' : ''}><i data-lucide="minus"></i></button>
           <span>${l.qty}</span>
-          <button data-act="qty" data-key="${esc(l.key)}" data-d="1" aria-label="Agregar uno"${cartQty(p.id) >= p.stock ? ' disabled' : ''}><i data-lucide="plus"></i></button>
+          <button data-act="qty" data-key="${esc(l.key)}" data-d="1" aria-label="Agregar uno"${cartQty(p.id) >= p.stock || (l.size && cartQtySize(p.id, l.size) >= sizeAvail(p, l.size)) ? ' disabled' : ''}><i data-lucide="plus"></i></button>
         </div></div>` : '<div class="muted" style="color:var(--alerta)">Se agotó, no se incluirá</div>'}
       </div>
       <button class="icon-btn line-x" data-act="rm" data-key="${esc(l.key)}" aria-label="Quitar ${esc(p.name)}"><i data-lucide="trash-2"></i></button>
@@ -1972,6 +1991,8 @@ function openEditor(id) {
     ? JSON.parse(JSON.stringify(p))
     : { name: '', price: '', comparePrice: '', category: (S.filter !== 'all' ? S.filter : (S.categories[0] || {}).id) || '', stock: 1, description: '', details: '', images: [], featured: false, available: true };
   $('#editTitle').textContent = p ? 'Editar pieza' : 'Nueva pieza';
+  S.editing.ringSizes = needsSize(S.editing);
+  if (S.editing.ringSizes && !hasSizeStock(S.editing)) S.editing.sizeStock = {};
   const e = S.editing;
   $('#editBody').innerHTML = `<div class="form">
     <div><div class="lbl" style="margin-bottom:6px">Fotos <span class="muted">(la primera es la portada; se muestran completas, sin recortar)</span></div><div class="imgs" id="edImgs"></div>
@@ -1981,18 +2002,32 @@ function openEditor(id) {
       <label class="lbl">Precio (MXN)<input class="input" data-f="price" type="number" inputmode="decimal" min="0" step="1" value="${esc(e.price)}"></label>
       <label class="lbl">Precio anterior <span class="muted">(opcional, para ofertas)</span><input class="input" data-f="comparePrice" type="number" inputmode="decimal" min="0" step="1" value="${esc(e.comparePrice ?? '')}"></label>
     </div>
-    <div class="form-2">
+    <div>
       <label class="lbl">Categoría<select class="input" data-f="category">${S.categories.map((c) => `<option value="${esc(c.id)}"${c.id === e.category ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}<option value=""${!e.category ? ' selected' : ''}>Sin categoría</option></select></label>
-      <label class="lbl">Piezas en inventario<input class="input" data-f="stock" type="number" inputmode="numeric" min="0" step="1" value="${esc(e.stock)}"></label>
     </div>
+    <label class="check"><input type="checkbox" data-f="ringSizes"${e.ringSizes ? ' checked' : ''}>Es anillo: manejar inventario por talla (1 al 20)</label>
+    <div id="edStock"></div>
     <label class="lbl">Descripción<textarea class="textarea" data-f="description" rows="4" placeholder="Qué significa la pieza, cómo se siente al usarla…">${esc(e.description)}</textarea></label>
     <label class="lbl">Detalles <span class="muted">(material, medidas, cuidados)</span><textarea class="textarea" data-f="details" rows="3" placeholder="Acero inoxidable con baño de oro 18k&#10;Ajustable">${esc(e.details)}</textarea></label>
-    <label class="check"><input type="checkbox" data-f="ringSizes"${needsSize(e) ? ' checked' : ''}>Pedir talla de anillo (lista del 1 al 20)</label>
     <label class="check"><input type="checkbox" data-f="featured"${e.featured ? ' checked' : ''}>Destacar al inicio del catálogo</label>
     <label class="check"><input type="checkbox" data-f="available"${e.available !== false ? ' checked' : ''}>Disponible para venta</label>
   </div>`;
   renderEditorImages();
+  renderEditorStock();
   openLayer('editModal');
+}
+
+function renderEditorStock() {
+  const e = S.editing, box = $('#edStock');
+  if (!e || !box) return;
+  if (e.ringSizes) {
+    const ss = e.sizeStock || (e.sizeStock = {});
+    box.innerHTML = `<div class="lbl">Inventario por talla <span class="muted">(deja en 0 las tallas que no tengas; la clienta solo verá las que tengan piezas)</span></div>
+      <div class="size-grid">${RING_SIZES.map((n) => `<label><span>Talla ${n}</span><input class="input" type="number" inputmode="numeric" min="0" step="1" data-size-stock="${n}" value="${Number(ss[n]) || 0}"></label>`).join('')}</div>
+      <p class="muted" id="edStockTotal" style="margin:8px 0 0">Total: ${sizeSum(ss)} piezas</p>`;
+  } else {
+    box.innerHTML = `<label class="lbl">Piezas en inventario<input class="input" data-f="stock" type="number" inputmode="numeric" min="0" step="1" value="${esc(e.stock)}"></label>`;
+  }
 }
 
 function renderEditorImages() {
@@ -2017,6 +2052,10 @@ async function saveProduct() {
   if (!String(e.name).trim()) { toast('Escribe el nombre de la pieza', 'info'); return; }
   if (e.price === '' || isNaN(Number(e.price))) { toast('Escribe el precio', 'info'); return; }
   if (S.uploading) { toast('Espera a que terminen de subir las fotos', 'info'); return; }
+  if (e.ringSizes) {
+    e.stock = sizeSum(e.sizeStock);
+    if (!e.stock && !confirm('No pusiste piezas en ninguna talla, así que el anillo se verá agotado. ¿Guardar así?')) return;
+  } else e.sizeStock = null;
   const btn = $('#saveProductBtn');
   btn.disabled = true; btn.textContent = 'Guardando…';
   try {
@@ -2035,8 +2074,9 @@ async function toggleSold(id) {
   const p = S.products.find((x) => x.id === id);
   if (!p) return;
   const reactivate = p.available === false || p.stock <= 0;
+  if (reactivate && hasSizeStock(p) && p.stock <= 0) { toast('Este anillo no tiene piezas en ninguna talla. Ponlas en Editar.', 'info', 4000); openEditor(id); return; }
   try {
-    const r = await api('/api/products/' + id, { method: 'PATCH', body: reactivate ? { available: true, stock: Math.max(1, p.stock) } : { available: false } });
+    const r = await api('/api/products/' + id, { method: 'PATCH', body: reactivate ? (hasSizeStock(p) ? { available: true } : { available: true, stock: Math.max(1, p.stock) }) : { available: false } });
     S.products = r.products;
     cacheCatalog();
     refreshAdminViews();
@@ -2263,7 +2303,7 @@ document.addEventListener('click', async (e) => {
       break;
     }
     case 'share-product': { const p = S.products.find((x) => x.id === id); shareLink(productUrl(id), p ? p.name + ' | Buenas Vibras' : 'Buenas Vibras'); break; }
-    case 'qty': { const l = S.cart.find((x) => lineKey(x) === t.dataset.key); const p = l && S.products.find((x) => x.id === l.id); if (l && p) { const d = Number(t.dataset.d); if (d < 0) l.qty = Math.max(1, l.qty - 1); else if (cartQty(p.id) < p.stock) l.qty += 1; saveCart(); renderCart(); } break; }
+    case 'qty': { const l = S.cart.find((x) => lineKey(x) === t.dataset.key); const p = l && S.products.find((x) => x.id === l.id); if (l && p) { const d = Number(t.dataset.d); if (d < 0) l.qty = Math.max(1, l.qty - 1); else if (cartQty(p.id) < p.stock && (!l.size || cartQtySize(p.id, l.size) < sizeAvail(p, l.size))) l.qty += 1; saveCart(); renderCart(); } break; }
     case 'rm': S.cart = S.cart.filter((x) => lineKey(x) !== t.dataset.key); saveCart(); renderCart(); break;
     case 'checkout': checkout(); break;
     case 'wa-sent': S.cart = []; saveCart(); S.checkout.sent = true; break;
@@ -2375,6 +2415,13 @@ $('#tabs').addEventListener('click', (e) => {
 // Campos que se editan en vivo
 document.addEventListener('input', (e) => {
   const el = e.target;
+  if (el.dataset.sizeStock && S.editing) {
+    const ss = S.editing.sizeStock || (S.editing.sizeStock = {});
+    const v = Math.max(0, Math.min(999, Math.floor(Number(el.value) || 0)));
+    if (v) ss[el.dataset.sizeStock] = v; else delete ss[el.dataset.sizeStock];
+    const tot = $('#edStockTotal'); if (tot) tot.textContent = `Total: ${sizeSum(ss)} piezas`;
+    return;
+  }
   if (el.dataset.color && S.admin) {
     S.pending[el.dataset.color] = el.value.toUpperCase();
     applyTheme();
@@ -2408,7 +2455,7 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', (e) => {
   const el = e.target;
-  if (el.id === 'pdSize') { S.pdSize = el.value; return; }
+  if (el.id === 'pdSize') { S.pdSize = el.value; S.pdQty = 1; renderProduct(); return; }
   if (el.dataset.catmode !== undefined && S.catDraft) {
     const c = S.catDraft[Number(el.dataset.catmode)];
     c.mode = el.value;
@@ -2419,6 +2466,13 @@ document.addEventListener('change', (e) => {
   if (el.dataset.catbg !== undefined && S.catDraft) { S.catDraft[Number(el.dataset.catbg)].bg = el.value; renderPanel(); return; }
   if (el.id === 'sort') { S.sort = el.value; renderGrid(); icons(); }
   if (el.dataset.f && S.editing) S.editing[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value;
+  if (el.dataset.f === 'category' && S.editing) {
+    S.editing.ringSizes = /anillo/.test(norm(catName(el.value)));
+    if (S.editing.ringSizes && !hasSizeStock(S.editing)) S.editing.sizeStock = {};
+    const cb = document.querySelector('#editBody [data-f="ringSizes"]'); if (cb) cb.checked = S.editing.ringSizes;
+    renderEditorStock();
+  }
+  if (el.dataset.f === 'ringSizes' && S.editing) { if (el.checked && !hasSizeStock(S.editing)) S.editing.sizeStock = {}; renderEditorStock(); }
 });
 
 $('#fileInput').addEventListener('change', (e) => handleFiles(e.target.files));
