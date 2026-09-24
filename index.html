@@ -44,6 +44,9 @@
   --azul:#8C9DBB;       /* azul del logo */
   --azul-hondo:#56668A; /* azul para texto y botones */
   --oro:#C6A15B;        /* destello dorado de la estrella */
+  --hero-bg:#7D90B2; --footer-bg:#56668A; --cat-bg:#EDF0F6;
+  --on-accent:#fff; --on-hero:#fff; --on-footer:#fff;
+  --nav-h:74px;
   --carbon:#2D2D2D;
   --gris:#6B6762;
   --linea:#E6DFD5;
@@ -59,7 +62,7 @@
   padding-top:env(safe-area-inset-top,0px);
 }
 *,*::before,*::after{box-sizing:inherit}
-html{scroll-behavior:smooth;scroll-padding-top:calc(76px + env(safe-area-inset-top,0px));-webkit-text-size-adjust:100%}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + env(safe-area-inset-top,0px));-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--perla);color:var(--carbon);font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 body.locked{overflow:hidden}
 img{max-width:100%;display:block}
@@ -81,8 +84,8 @@ svg.lucide{width:1.25em;height:1.25em;stroke-width:1.5;flex:none}
 /* Botones */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.55em;min-height:48px;padding:0 1.5em;border-radius:999px;font-weight:500;font-size:.95rem;letter-spacing:.02em;text-decoration:none;transition:background .2s,color .2s,border-color .2s,transform .15s}
 .btn:active{transform:scale(.98)}
-.btn-dark{background:var(--azul-hondo);color:#fff}
-.btn-dark:hover{background:#465576}
+.btn-dark{background:var(--azul-hondo);color:var(--on-accent)}
+.btn-dark:hover{filter:brightness(.9)}
 .btn-light{background:#fff;color:var(--azul-hondo)}
 .btn-light:hover{background:var(--niebla)}
 .btn-line{border:1px solid var(--linea);background:#fff;color:var(--carbon)}
@@ -95,7 +98,7 @@ svg.lucide{width:1.25em;height:1.25em;stroke-width:1.5;flex:none}
 .btn[disabled]{opacity:.55;pointer-events:none}
 .icon-btn{position:relative;display:inline-grid;place-items:center;width:44px;height:44px;border-radius:50%;color:var(--carbon);transition:background .2s}
 .icon-btn:hover{background:var(--niebla)}
-.badge{position:absolute;top:4px;right:2px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--azul-hondo);color:#fff;font-size:11px;line-height:18px;font-weight:500;text-align:center}
+.badge{position:absolute;top:4px;right:2px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--azul-hondo);color:var(--on-accent);font-size:11px;line-height:18px;font-weight:500;text-align:center}
 .badge:empty,.badge[data-n="0"]{display:none}
 
 /* ── Barra de anuncio ── */
@@ -103,17 +106,19 @@ svg.lucide{width:1.25em;height:1.25em;stroke-width:1.5;flex:none}
 /* ── Navegación ── */
 .nav{position:sticky;top:0;z-index:40;background:rgba(253,251,247,.92);backdrop-filter:saturate(1.2) blur(10px);-webkit-backdrop-filter:saturate(1.2) blur(10px);border-bottom:1px solid transparent;transition:border-color .2s}
 .nav.scrolled{border-bottom-color:var(--linea)}
-.nav-in{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:68px}
-.brand{text-decoration:none;display:flex;flex-direction:column;align-items:center;line-height:1}
-.brand-script{font-family:var(--script);font-size:2.05rem;color:var(--azul-hondo);line-height:.9}
-.brand-sub{font-size:.58rem;letter-spacing:.42em;padding-left:.42em;color:var(--gris);margin-top:2px}
+.nav-in{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;height:var(--nav-h);gap:4px}
+.brand{text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-self:center;line-height:1;min-width:0;max-width:100%;padding:4px 0}
+.brand-script{font-family:var(--script);font-size:clamp(1.35rem,6.4vw,2.05rem);color:var(--azul-hondo);line-height:1.2;white-space:nowrap;padding:0 .12em}
+.brand-sub{font-size:.56rem;letter-spacing:.42em;padding-left:.42em;color:var(--gris);margin-top:1px;white-space:nowrap}
 .nav-links{display:none}
 .nav-icons{display:flex;justify-content:flex-end}
+@media (max-width:420px){.nav .icon-btn{width:40px;height:40px}.nav-in{gap:0}}
 .nav-left{display:flex}
 @media (min-width:960px){
-  .nav-in{grid-template-columns:auto 1fr auto;gap:40px;height:76px}
+  :root{--nav-h:82px}
+  .nav-in{grid-template-columns:auto 1fr auto;gap:40px}
   .nav-left{display:none}
-  .brand{align-items:flex-start}
+  .brand{align-items:flex-start;justify-self:start}
   .brand-script{font-size:2.3rem}
   .nav-links{display:flex;gap:30px;justify-content:center}
   .nav-links a{text-decoration:none;font-size:.92rem;color:var(--carbon);padding:6px 0;border-bottom:1px solid transparent;transition:border-color .2s,color .2s}
@@ -121,23 +126,22 @@ svg.lucide{width:1.25em;height:1.25em;stroke-width:1.5;flex:none}
 }
 
 /* Barra de administrador */
-.adminbar{position:sticky;top:68px;z-index:39;background:#2F3A52;color:#fff;font-size:.85rem}
+.adminbar{position:sticky;top:var(--nav-h);z-index:39;background:#2F3A52;color:#fff;font-size:.85rem}
 .adminbar .wrap{display:flex;align-items:center;gap:10px;min-height:48px;flex-wrap:wrap;padding-top:6px;padding-bottom:6px}
 .adminbar strong{font-weight:500;display:flex;align-items:center;gap:.4em;margin-right:auto}
 .adminbar .btn{min-height:34px;font-size:.8rem;padding:0 .8em;gap:.35em}
 .adminbar .btn-ghost{border:1px solid rgba(255,255,255,.35);color:#fff}
-@media (min-width:960px){.adminbar{top:76px}}
 
 /* ── Hero ── */
-.hero{background:#7D90B2;color:#fff;position:relative;overflow:hidden}
+.hero{background:var(--hero-bg);color:var(--on-hero);position:relative;overflow:hidden}
 .hero-in{display:grid;gap:34px;padding:44px 20px 0;max-width:var(--wrap);margin:0 auto}
 .hero-copy{position:relative;z-index:1}
 .hero-star{width:46px;height:46px;margin-bottom:18px}
 .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.6rem,11vw,4.6rem);line-height:1.02;margin:0 0 .35em;max-width:12ch}
-.hero p{font-size:1.05rem;font-weight:400;max-width:36ch;margin:0 0 28px;color:#fff}
-.hero-arch{position:relative;justify-self:center;width:min(66vw,300px);aspect-ratio:3/4;border-radius:999px 999px 0 0;overflow:hidden;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-bottom:0}
+.hero p{font-size:1.05rem;font-weight:400;max-width:36ch;margin:0 0 28px;color:inherit}
+.hero-arch{position:relative;justify-self:center;width:min(66vw,300px);aspect-ratio:3/4;border-radius:999px 999px 0 0;overflow:hidden;background:color-mix(in srgb,currentColor 12%,transparent);border:1px solid color-mix(in srgb,currentColor 35%,transparent);border-bottom:0}
 .hero-arch img{width:100%;height:100%;object-fit:cover}
-.hero-arch .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:30px;font-size:.85rem;color:rgba(255,255,255,.85)}
+.hero-arch .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:30px;font-size:.85rem;color:inherit;opacity:.85}
 .hero-arch .ph svg{width:30px;height:30px;margin:0 auto 10px;display:block}
 .hero-glow{position:absolute;right:-120px;top:-120px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 65%);pointer-events:none}
 @media (min-width:860px){
@@ -155,7 +159,7 @@ svg.lucide{width:1.25em;height:1.25em;stroke-width:1.5;flex:none}
 .cats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 @media (min-width:760px){.cats{grid-template-columns:repeat(4,1fr);gap:22px}}
 .cat{display:block;text-align:center;text-decoration:none;color:inherit;width:100%}
-.cat-media{display:block;position:relative;aspect-ratio:3/4;border-radius:999px 999px var(--r-md) var(--r-md);overflow:hidden;background:var(--niebla)}
+.cat-media{display:block;position:relative;aspect-ratio:3/4;border-radius:999px 999px var(--r-md) var(--r-md);overflow:hidden;background:var(--cat-bg)}
 .cat-media img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
 .cat:hover .cat-media img{transform:scale(1.06)}
 .cat-media .cat-icon{position:absolute;inset:0;display:grid;place-items:center;color:var(--azul-hondo);transition:transform .8s var(--ease)}
@@ -171,8 +175,8 @@ svg.lucide{width:1.25em;height:1.25em;stroke-width:1.5;flex:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;min-height:40px;padding:0 1.1em;border-radius:999px;border:1px solid var(--linea);background:#fff;font-size:.9rem;display:inline-flex;align-items:center;gap:.4em;white-space:nowrap}
 .chip svg{width:15px;height:15px;color:var(--azul)}
-.chip[aria-pressed="true"]{background:var(--azul-hondo);border-color:var(--azul-hondo);color:#fff}
-.chip[aria-pressed="true"] svg{color:#fff}
+.chip[aria-pressed="true"]{background:var(--azul-hondo);border-color:var(--azul-hondo);color:var(--on-accent)}
+.chip[aria-pressed="true"] svg{color:var(--on-accent)}
 .tools-row{display:flex;gap:10px;align-items:center}
 .tools-row>label:not(.field-search){flex:none;max-width:48%}
 .field-search{flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid var(--linea);border-radius:999px;background:#fff}
@@ -206,7 +210,7 @@ svg.lucide{width:1.25em;height:1.25em;stroke-width:1.5;flex:none}
 .price s{color:var(--gris);font-weight:400;margin-left:.4em;font-size:.88em}
 .card-actions{display:flex;gap:6px;margin-top:auto;padding-top:10px}
 .card-add{flex:1;min-height:40px;border-radius:999px;border:1px solid var(--azul-hondo);color:var(--azul-hondo);font-size:.85rem;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:.4em;transition:background .2s,color .2s}
-.card-add:hover{background:var(--azul-hondo);color:#fff}
+.card-add:hover{background:var(--azul-hondo);color:var(--on-accent)}
 .card-add[disabled]{border-color:var(--linea);color:var(--gris);pointer-events:none}
 .card-admin{display:flex;gap:6px;margin-top:8px}
 .card-admin button{flex:1;min-height:34px;border-radius:8px;background:#2F3A52;color:#fff;font-size:.76rem;display:inline-flex;align-items:center;justify-content:center;gap:.3em}
@@ -238,26 +242,26 @@ svg.lucide{width:1.25em;height:1.25em;stroke-width:1.5;flex:none}
 @media (min-width:860px){.about{grid-template-columns:.8fr 1.2fr;gap:70px}}
 
 /* ── Footer ── */
-.footer{background:var(--azul-hondo);color:#EEF1F7;padding:60px 0 calc(28px + env(safe-area-inset-bottom,0px))}
-.footer a{color:#fff}
+.footer{background:var(--footer-bg);color:var(--on-footer);padding:60px 0 calc(28px + env(safe-area-inset-bottom,0px))}
+.footer a{color:inherit}
 .foot-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:38px}
 .foot-grid>*{min-width:0}
 @media (min-width:860px){.foot-grid{grid-template-columns:1.3fr 1fr 1.4fr}}
-.foot-brand .brand-script{color:#fff;font-size:2.6rem}
-.foot-brand p{color:#D5DBE8;margin:10px 0 0;max-width:34ch;font-size:.93rem}
-.foot-h{font-family:var(--serif);font-size:1.3rem;margin:0 0 12px;color:#fff;font-weight:400}
+.foot-brand .brand-script{color:inherit;font-size:2.6rem;line-height:1.2}
+.foot-brand p{color:inherit;opacity:.85;margin:10px 0 0;max-width:34ch;font-size:.93rem}
+.foot-h{font-family:var(--serif);font-size:1.3rem;margin:0 0 12px;color:inherit;font-weight:400}
 .foot-links{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:.93rem}
-.foot-links a,.foot-links button{text-decoration:none;color:#E2E7F0}
-.foot-links a:hover,.foot-links button:hover{color:#fff;text-decoration:underline}
+.foot-links a,.foot-links button{text-decoration:none;color:inherit;opacity:.9}
+.foot-links a:hover,.foot-links button:hover{opacity:1;text-decoration:underline}
 .news{display:flex;gap:8px;margin-top:12px}
 .news .btn{flex:none;padding:0 1.1em}
-.news input{flex:1;min-width:0;min-height:46px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;padding:0 16px;font-size:16px}
-.news input::placeholder{color:#C9D0DE}
+.news input{flex:1;min-width:0;min-height:46px;border-radius:999px;border:1px solid color-mix(in srgb,currentColor 35%,transparent);background:color-mix(in srgb,currentColor 10%,transparent);color:inherit;padding:0 16px;font-size:16px}
+.news input::placeholder{color:inherit;opacity:.65}
 .social{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-.social a{display:inline-flex;align-items:center;gap:.45em;min-height:42px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);text-decoration:none;font-size:.88rem}
-.social a:hover{background:rgba(255,255,255,.12)}
-.foot-bottom{margin-top:44px;padding-top:20px;border-top:1px solid rgba(255,255,255,.2);display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:space-between;font-size:.8rem;color:#C9D0DE}
-.foot-bottom button{color:#C9D0DE;text-decoration:underline;text-underline-offset:3px;font-size:.8rem}
+.social a{display:inline-flex;align-items:center;gap:.45em;min-height:42px;padding:0 14px;border-radius:999px;border:1px solid color-mix(in srgb,currentColor 35%,transparent);text-decoration:none;font-size:.88rem}
+.social a:hover{background:color-mix(in srgb,currentColor 12%,transparent)}
+.foot-bottom{margin-top:44px;padding-top:20px;border-top:1px solid color-mix(in srgb,currentColor 20%,transparent);display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:space-between;font-size:.8rem;color:inherit;opacity:.85}
+.foot-bottom button{color:inherit;text-decoration:underline;text-underline-offset:3px;font-size:.8rem}
 .admin-link{opacity:.55}
 .admin-link:hover{opacity:1}
 
@@ -386,7 +390,7 @@ label.lbl{display:grid;gap:6px;font-size:.86rem;color:#4A4744}
 .imgs .it .ctl{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;background:rgba(255,255,255,.92)}
 .imgs .it .ctl button{flex:1;height:32px;display:grid;place-items:center}
 .imgs .it .ctl svg{width:15px;height:15px}
-.imgs .it .first{position:absolute;left:6px;top:6px;font-size:.66rem;background:var(--azul-hondo);color:#fff;border-radius:999px;padding:2px 7px}
+.imgs .it .first{position:absolute;left:6px;top:6px;font-size:.66rem;background:var(--azul-hondo);color:var(--on-accent);border-radius:999px;padding:2px 7px}
 .upload{aspect-ratio:4/5;border:1px dashed var(--azul);border-radius:8px;display:grid;place-items:center;text-align:center;color:var(--azul-hondo);font-size:.78rem;padding:8px;background:#fff}
 .upload svg{width:22px;height:22px;margin:0 auto 4px;display:block}
 .cat-row{display:grid;grid-template-columns:auto 52px 1fr;gap:10px;align-items:center;background:#fff;border:1px solid var(--linea);border-radius:var(--r-md);padding:10px}
@@ -425,6 +429,24 @@ label.lbl{display:grid;gap:6px;font-size:.86rem;color:#4A4744}
 .img-edit-bar .btn{min-height:40px;font-size:.84rem;box-shadow:0 4px 18px rgba(30,35,50,.18)}
 .savebar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:55;background:#2F3A52;color:#fff;border-radius:999px;padding:6px 6px 6px 18px;display:flex;align-items:center;gap:8px;box-shadow:0 10px 30px rgba(20,25,40,.28);font-size:.88rem;width:max-content;max-width:calc(100% - 24px)}
 .savebar .btn{min-height:40px;font-size:.84rem;padding:0 1em}
+.size-pick{margin:0}
+.size-pick select{max-width:220px}
+.size-pick a{color:var(--azul-hondo)}
+.line-size{display:inline-block;font-size:.8rem;color:var(--gris);margin-left:.4em}
+.color-row{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;background:#fff;border:1px solid var(--linea);border-radius:var(--r-md);padding:8px 12px}
+.color-row input[type=color]{width:44px;height:36px;border:1px solid var(--linea);border-radius:8px;padding:2px;background:#fff;cursor:pointer}
+.color-row code{font-size:.78rem;color:var(--gris)}
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.preset{display:flex;flex-direction:column;gap:8px;align-items:flex-start;border:1px solid var(--linea);border-radius:var(--r-md);padding:10px;background:#fff;text-align:left;font-size:.86rem}
+.preset .dots{display:flex}
+.preset .dots span{width:20px;height:20px;border-radius:50%;border:2px solid #fff;margin-right:-6px}
+.mini{border:1px solid var(--linea);border-radius:var(--r-md);overflow:hidden;background:var(--perla);color:var(--carbon);margin:6px 0 4px}
+.mini-hero{background:var(--hero-bg);color:var(--on-hero);padding:16px;font-family:var(--serif);font-size:1.35rem}
+.mini-body{padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.mini-cat{width:44px;height:56px;border-radius:22px 22px 6px 6px;background:var(--cat-bg)}
+.mini-card{width:44px;height:56px;border-radius:6px;background:var(--arena)}
+.mini-foot{background:var(--footer-bg);color:var(--on-footer);padding:10px 16px;font-size:.8rem}
+.mini-soft{background:var(--niebla);padding:8px 16px;font-size:.8rem}
 .savebar .btn-ghost{color:#fff;border:1px solid rgba(255,255,255,.35)}
 .panel-h{font-family:var(--serif);font-weight:400;font-size:1.45rem;margin:18px 0 0;padding-top:14px;border-top:1px solid var(--linea)}
 .panel-h:first-of-type{border-top:0;padding-top:0}
@@ -481,7 +503,7 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
     <div class="hero-glow"></div>
     <div class="hero-in">
       <div class="hero-copy">
-        <svg class="hero-star" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 2 C25 18 30 23 46 24 C30 25 25 30 24 46 C23 30 18 25 2 24 C18 23 23 18 24 2Z" fill="#fff"/><path d="M33 13l3-3M15 13l-3-3M33 35l3 3M15 35l-3 3" stroke="#E9D6A8" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <svg class="hero-star" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 2 C25 18 30 23 46 24 C30 25 25 30 24 46 C23 30 18 25 2 24 C18 23 23 18 24 2Z" fill="currentColor"/><path d="M33 13l3-3M15 13l-3-3M33 35l3 3M15 35l-3 3" stroke="#E9D6A8" stroke-width="1.4" stroke-linecap="round"/></svg>
         <h1 class="ed" data-text="heroTitle">Joyería que vibra contigo</h1>
         <p class="ed" data-multi data-text="heroSubtitle">Piezas delicadas para acompañar tus intenciones todos los días.</p>
         <a class="btn btn-light" href="#catalogo"><span data-text="heroButton">Ver colección</span><i data-lucide="arrow-down"></i></a>
@@ -566,7 +588,7 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
       </div>
       <div>
         <h3 class="foot-h ed" data-text="newsTitle">Novedades en tu correo</h3>
-        <p class="ed" data-multi data-text="newsText" style="margin:0;color:#D5DBE8;font-size:.93rem">Te avisamos cuando lleguen piezas nuevas. Nada más.</p>
+        <p class="ed" data-multi data-text="newsText" style="margin:0;opacity:.85;font-size:.93rem">Te avisamos cuando lleguen piezas nuevas. Nada más.</p>
         <form class="news" id="newsForm" novalidate>
           <label class="sr" for="newsEmail">Correo electrónico</label>
           <input id="newsEmail" type="email" inputmode="email" autocomplete="email" placeholder="tu@correo.com" required>
@@ -653,6 +675,7 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
       <button class="tab" role="tab" data-tab="products"><i data-lucide="gem"></i>Piezas</button>
       <button class="tab" role="tab" data-tab="categories"><i data-lucide="layout-grid"></i>Categorías</button>
       <button class="tab" role="tab" data-tab="texts"><i data-lucide="type"></i>Textos y fotos</button>
+      <button class="tab" role="tab" data-tab="colors"><i data-lucide="palette"></i>Colores</button>
       <button class="tab" role="tab" data-tab="backups"><i data-lucide="history"></i>Respaldos</button>
       <button class="tab" role="tab" data-tab="subs"><i data-lucide="mail"></i>Suscriptores</button>
     </div>
@@ -809,6 +832,56 @@ const icons = () => { if (window.lucide) window.lucide.createIcons(); };
 const productUrl = (id) => `${OFFICIAL_URL}/?p=${id}`;
 const orderUrl = (code) => `${OFFICIAL_URL}/?pedido=${code}`;
 const txt = (k) => { const v = S.settings[k]; return v != null && String(v).trim() ? String(v) : (FIELD[k] ? FIELD[k].d : (ICON_FIELDS[k] || '')); };
+
+/* ═════════════════════════════ Colores personalizables ═════════════════════════════ */
+const THEME = [
+  { k: 'colorAccent', v: '--azul-hondo', on: '--on-accent', def: '#56668A', label: 'Botones, precios y detalles' },
+  { k: 'colorSoftAccent', v: '--azul', def: '#8C9DBB', label: 'Íconos y bordes suaves' },
+  { k: 'colorHero', v: '--hero-bg', on: '--on-hero', def: '#7D90B2', label: 'Fondo de la portada' },
+  { k: 'colorBg', v: '--perla', def: '#FDFBF7', label: 'Fondo de la página' },
+  { k: 'colorCard', v: '--arena', def: '#F3EEE7', label: 'Fondo de las fotos de piezas' },
+  { k: 'colorCat', v: '--cat-bg', def: '#EDF0F6', label: 'Fondo de las categorías' },
+  { k: 'colorSoft', v: '--niebla', def: '#EDF0F6', label: 'Fondo de “Por qué elegirnos”' },
+  { k: 'colorFooter', v: '--footer-bg', on: '--on-footer', def: '#56668A', label: 'Fondo del pie de página' },
+  { k: 'colorText', v: '--carbon', def: '#2D2D2D', label: 'Texto principal' },
+  { k: 'colorGold', v: '--oro', def: '#C6A15B', label: 'Destellos dorados' },
+];
+const THEME_MAP = Object.fromEntries(THEME.map((t) => [t.k, t]));
+const PRESETS = [
+  { name: 'Azul del logo', c: Object.fromEntries(THEME.map((t) => [t.k, t.def])) },
+  { name: 'Rosa cuarzo', c: { colorAccent: '#8E5563', colorSoftAccent: '#D3A2AD', colorHero: '#C98E9A', colorBg: '#FFF9F8', colorCard: '#F7ECEA', colorCat: '#F3E1E4', colorSoft: '#F6E8EA', colorFooter: '#7A4A55', colorText: '#2E2A2B', colorGold: '#C6A15B' } },
+  { name: 'Verde salvia', c: { colorAccent: '#55684F', colorSoftAccent: '#9DB09A', colorHero: '#8A9F87', colorBg: '#FAFBF7', colorCard: '#EEF0E8', colorCat: '#E3EADF', colorSoft: '#E8EEE4', colorFooter: '#4A5A46', colorText: '#2A2E29', colorGold: '#B99A5B' } },
+  { name: 'Arena y oro', c: { colorAccent: '#7E6036', colorSoftAccent: '#C9B08A', colorHero: '#CDB894', colorBg: '#FDFBF7', colorCard: '#F4EDE2', colorCat: '#EFE4D2', colorSoft: '#F3EBDD', colorFooter: '#6E5634', colorText: '#2D2A26', colorGold: '#B8914A' } },
+  { name: 'Noche y oro', c: { colorAccent: '#2F3A52', colorSoftAccent: '#8C9DBB', colorHero: '#2F3A52', colorBg: '#FBFAF7', colorCard: '#F1EEE8', colorCat: '#E8EBF2', colorSoft: '#ECEEF3', colorFooter: '#1F2638', colorText: '#25262B', colorGold: '#C6A15B' } },
+  { name: 'Lavanda', c: { colorAccent: '#6A5A8C', colorSoftAccent: '#B3A7CF', colorHero: '#A596C6', colorBg: '#FCFBFE', colorCard: '#F1EEF6', colorCat: '#ECE7F5', colorSoft: '#EFECF7', colorFooter: '#584A77', colorText: '#2B2930', colorGold: '#C6A15B' } },
+];
+const isHex = (v) => /^#[0-9a-f]{6}$/i.test(String(v || ''));
+function colorVal(k) {
+  const v = k in S.pending ? S.pending[k] : S.settings[k];
+  return (isHex(v) ? v : THEME_MAP[k].def).toUpperCase();
+}
+function luminance(hex) {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+// Elige blanco o carbón para el texto encima de un color, según cuál se lea mejor
+const onColor = (hex) => { const L = luminance(hex); return 1.05 / (L + 0.05) >= (L + 0.05) / 0.076 ? '#FFFFFF' : '#2D2D2D'; };
+function applyTheme() {
+  const root = document.documentElement.style;
+  for (const t of THEME) {
+    const v = colorVal(t.k);
+    root.setProperty(t.v, v);
+    if (t.on) root.setProperty(t.on, onColor(v));
+  }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', colorVal('colorHero'));
+}
+
+/* Tallas de anillo */
+const RING_SIZES = Array.from({ length: 20 }, (_, i) => String(i + 1));
+const needsSize = (p) => p.ringSizes === true || (p.ringSizes == null && /anillo/.test(norm(catName(p.category))));
+const lineKey = (l) => l.id + '~' + (l.size || '');
+const cartQty = (id) => S.cart.filter((l) => l.id === id).reduce((a, l) => a + l.qty, 0);
 const waNumber = () => { const d = txt('whatsapp').replace(/\D/g, ''); return d.length === 10 ? '52' + d : (d.length >= 11 ? d : WHATSAPP); };
 const igUser = () => txt('instagram').replace(/^@/, '').trim() || 'buenasvibras_8';
 const waLink = (text) => `https://wa.me/${waNumber()}?text=${encodeURIComponent(text)}`;
@@ -946,6 +1019,7 @@ function renderAll() {
 }
 
 function renderSettings() {
+  applyTheme();
   $$('[data-text]').forEach((el) => {
     const k = el.dataset.text;
     if (el === document.activeElement) return;
@@ -1008,10 +1082,13 @@ async function saveSettings(changes, btn) {
   finally { if (btn) btn.disabled = false; }
 }
 
+const catMode = (c) => c.mode || (c.image ? 'image' : 'auto');
 function catCover(c) {
-  if (c.image) return imgUrl(c.image);
+  const mode = catMode(c);
+  if (mode === 'color') return '';
+  if (mode === 'image') return c.image ? imgUrl(c.image) : '';
   const p = S.products.find((x) => x.category === c.id && x.images && x.images.length);
-  return p ? imgUrl(p.images[0]) : '';
+  return p ? imgUrl(p.images[0]) : (c.image ? imgUrl(c.image) : '');
 }
 
 function renderCats() {
@@ -1020,7 +1097,7 @@ function renderCats() {
   el.innerHTML = S.categories.map((c) => {
     const img = catCover(c);
     return `<button class="cat${S.filter === c.id ? ' active' : ''}" data-act="cat" data-id="${esc(c.id)}">
-      <span class="cat-media">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<span class="cat-icon"><i data-lucide="${esc(c.icon || 'gem')}"></i></span>`}</span>
+      <span class="cat-media"${isHex(c.bg) ? ` style="background:${c.bg}"` : ''}>${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<span class="cat-icon"${isHex(c.bg) && onColor(c.bg) === '#FFFFFF' ? ' style="color:#fff"' : ''}><i data-lucide="${esc(c.icon || 'gem')}"></i></span>`}</span>
       <span class="cat-name"><i data-lucide="${esc(c.icon || 'gem')}"></i>${esc(c.name)}</span>
     </button>`;
   }).join('');
@@ -1047,7 +1124,7 @@ function cardHTML(p) {
       ${cat ? `<span class="card-cat">${esc(cat)}</span>` : ''}
       <h3 class="card-title"><button data-act="open" data-id="${p.id}">${esc(p.name)}</button></h3>
       <span class="price">${money(p.price)}${p.comparePrice ? `<s>${money(p.comparePrice)}</s>` : ''}</span>
-      <div class="card-actions"><button class="card-add" data-act="add" data-id="${p.id}"${out ? ' disabled' : ''}>${out ? 'Agotado' : '<i data-lucide="plus"></i>Agregar'}</button></div>
+      <div class="card-actions"><button class="card-add" data-act="add" data-id="${p.id}"${out ? ' disabled' : ''}>${out ? 'Agotado' : needsSize(p) ? '<i data-lucide="ruler"></i>Elegir talla' : '<i data-lucide="plus"></i>Agregar'}</button></div>
       ${S.admin ? `<div class="card-admin">
         <button data-act="edit" data-id="${p.id}"><i data-lucide="pencil"></i>Editar</button>
         <button class="alt" data-act="toggle-sold" data-id="${p.id}" title="${out ? 'Volver a mostrar como disponible' : 'Marcar como vendida'}">${out ? '<i data-lucide="rotate-ccw"></i>Reactivar' : '<i data-lucide="check"></i>Vendida'}</button>
@@ -1145,7 +1222,7 @@ function setParam(key, value) {
 function openProduct(id) {
   const p = S.products.find((x) => x.id === id);
   if (!p) { toast('Esta pieza ya no está en el catálogo', 'info'); return; }
-  if (S.current !== id) { S.pdQty = 1; S.car = null; }
+  if (S.current !== id) { S.pdQty = 1; S.pdSize = ''; S.car = null; }
   S.current = id;
   renderProduct();
   openLayer('productModal');
@@ -1157,7 +1234,8 @@ function renderProduct() {
   if (!p) { closeLayer('productModal'); return; }
   const imgs = p.images && p.images.length ? p.images : [''];
   const out = isOut(p);
-  const inCart = (S.cart.find((l) => l.id === p.id) || {}).qty || 0;
+  const inCart = cartQty(p.id);
+  const sized = needsSize(p);
   const maxQty = Math.max(1, (p.stock | 0) - inCart);
   S.pdQty = Math.min(S.pdQty, maxQty);
   const fav = S.favs.includes(p.id);
@@ -1185,6 +1263,10 @@ function renderProduct() {
         ${p.description ? `<p class="pd-desc">${esc(p.description)}</p>` : ''}
         ${p.details ? `<div class="pd-details">${esc(p.details)}</div>` : ''}
         ${out ? `<a class="btn btn-wa" href="${waLink('Hola, ¿volverán a tener esta pieza? ' + p.name + '\n' + productUrl(p.id))}" target="_blank" rel="noopener"><i data-lucide="message-circle"></i>Preguntar si vuelve</a>` : `
+        ${sized ? `<label class="lbl size-pick">Talla del anillo
+          <select class="input" id="pdSize"><option value="">Elige tu talla</option>${RING_SIZES.map((n) => `<option value="${n}"${S.pdSize === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
+          <span class="muted">¿No sabes tu talla? <a href="${waLink('Hola, ¿me ayudan a saber mi talla de anillo? Me interesa: ' + p.name)}" target="_blank" rel="noopener">Pregúntanos por WhatsApp</a></span>
+        </label>` : ''}
         <div class="buy-row">
           <div class="qty" aria-label="Cantidad">
             <button data-act="pd-qty" data-d="-1" aria-label="Quitar uno"${S.pdQty <= 1 ? ' disabled' : ''}><i data-lucide="minus"></i></button>
@@ -1279,27 +1361,40 @@ function setupCarousel(root, n, thumbs) {
 }
 
 /* ═════════════════════════════ Carrito ═════════════════════════════ */
-function saveCart() { store.set('bv_cart', S.cart.map(({ id, qty }) => ({ id, qty }))); updateCounts(); }
+function saveCart() { store.set('bv_cart', S.cart.map(({ id, qty, size }) => (size ? { id, qty, size } : { id, qty }))); updateCounts(); }
 
 function cartLines() {
+  const used = {};
   return S.cart.map((l) => {
     const p = S.products.find((x) => x.id === l.id);
-    const ok = !!p && !isOut(p);
-    return { id: l.id, p, qty: ok ? Math.min(l.qty, p.stock) : l.qty, ok };
+    let ok = !!p && !isOut(p);
+    let qty = l.qty;
+    if (ok) {
+      qty = Math.min(l.qty, Math.max(0, p.stock - (used[p.id] || 0)));
+      used[p.id] = (used[p.id] || 0) + qty;
+      ok = qty > 0;
+    }
+    return { id: l.id, size: l.size || '', key: lineKey(l), p, qty: ok ? qty : l.qty, ok };
   });
 }
 
-function addToCart(id, qty = 1) {
+function addToCart(id, qty = 1, size = '') {
   const p = S.products.find((x) => x.id === id);
   if (!p || isOut(p)) { toast('Esta pieza está agotada', 'info'); return false; }
-  const line = S.cart.find((l) => l.id === id);
-  const cur = line ? line.qty : 0;
-  const next = Math.min(p.stock, cur + qty);
-  if (next === cur) { toast(`Solo hay ${p.stock} ${p.stock === 1 ? 'pieza disponible' : 'piezas disponibles'}`, 'info'); return false; }
-  if (line) line.qty = next; else S.cart.push({ id, qty: next });
+  if (needsSize(p) && !size) {
+    stack.filter((l) => ['searchModal', 'favDrawer', 'cartDrawer'].includes(l.id)).forEach(closeLayer);
+    if (S.current !== id) openProduct(id);
+    toast('Elige la talla del anillo', 'ruler');
+    setTimeout(() => { const sel = $('#pdSize'); if (sel) sel.focus(); }, 350);
+    return false;
+  }
+  const add = Math.min(qty, p.stock - cartQty(id));
+  if (add <= 0) { toast(`Solo hay ${p.stock} ${p.stock === 1 ? 'pieza disponible' : 'piezas disponibles'}`, 'info'); return false; }
+  const line = S.cart.find((l) => l.id === id && (l.size || '') === size);
+  if (line) line.qty += add; else S.cart.push(size ? { id, qty: add, size } : { id, qty: add });
   S.checkout = null;
   saveCart();
-  toast(next - cur > 1 ? `Agregaste ${next - cur} al carrito` : 'Agregada al carrito', 'shopping-bag');
+  toast((add > 1 ? `Agregaste ${add} al carrito` : 'Agregada al carrito') + (size ? ` (talla ${size})` : ''), 'shopping-bag');
   return true;
 }
 
@@ -1328,19 +1423,19 @@ function renderCart() {
   }
   body.innerHTML = lines.map((l) => {
     const p = l.p;
-    if (!p) return `<div class="line bad"><div class="line-img"></div><div><h4>Pieza no disponible</h4><span class="muted">Ya no está en el catálogo</span></div><button class="icon-btn line-x" data-act="rm" data-id="${esc(l.id)}" aria-label="Quitar"><i data-lucide="x"></i></button></div>`;
+    if (!p) return `<div class="line bad"><div class="line-img"></div><div><h4>Pieza no disponible</h4><span class="muted">Ya no está en el catálogo</span></div><button class="icon-btn line-x" data-act="rm" data-key="${esc(l.key)}" aria-label="Quitar"><i data-lucide="x"></i></button></div>`;
     return `<div class="line${l.ok ? '' : ' bad'}">
       <button class="line-img" data-act="open" data-id="${p.id}" aria-label="Ver ${esc(p.name)}">${p.images && p.images[0] ? `<img src="${esc(imgUrl(p.images[0]))}" alt="">` : ''}</button>
       <div>
         <h4>${esc(p.name)}</h4>
-        <span class="price">${money(p.price)}</span>
+        <span class="price">${money(p.price)}</span>${l.size ? `<span class="line-size">Talla ${esc(l.size)}</span>` : ''}
         ${l.ok ? `<div><div class="qty">
-          <button data-act="qty" data-id="${p.id}" data-d="-1" aria-label="Quitar uno"${l.qty <= 1 ? ' disabled' : ''}><i data-lucide="minus"></i></button>
+          <button data-act="qty" data-key="${esc(l.key)}" data-d="-1" aria-label="Quitar uno"${l.qty <= 1 ? ' disabled' : ''}><i data-lucide="minus"></i></button>
           <span>${l.qty}</span>
-          <button data-act="qty" data-id="${p.id}" data-d="1" aria-label="Agregar uno"${l.qty >= p.stock ? ' disabled' : ''}><i data-lucide="plus"></i></button>
+          <button data-act="qty" data-key="${esc(l.key)}" data-d="1" aria-label="Agregar uno"${cartQty(p.id) >= p.stock ? ' disabled' : ''}><i data-lucide="plus"></i></button>
         </div></div>` : '<div class="muted" style="color:var(--alerta)">Se agotó, no se incluirá</div>'}
       </div>
-      <button class="icon-btn line-x" data-act="rm" data-id="${p.id}" aria-label="Quitar ${esc(p.name)}"><i data-lucide="trash-2"></i></button>
+      <button class="icon-btn line-x" data-act="rm" data-key="${esc(l.key)}" aria-label="Quitar ${esc(p.name)}"><i data-lucide="trash-2"></i></button>
     </div>`;
   }).join('');
   const total = lines.filter((l) => l.ok).reduce((s, l) => s + l.p.price * l.qty, 0);
@@ -1357,7 +1452,7 @@ function renderCart() {
 }
 
 function orderMessage(order, url) {
-  const lines = order.items.map((i) => `• ${i.qty} × ${i.name}: ${money(i.price)}${i.qty > 1 ? ` c/u = ${money(i.price * i.qty)}` : ''}`);
+  const lines = order.items.map((i) => `• ${i.qty} × ${i.name}${i.size ? ` (talla ${i.size})` : ''}: ${money(i.price)}${i.qty > 1 ? ` c/u = ${money(i.price * i.qty)}` : ''}`);
   let m = `${txt('orderIntro')}\n\n${lines.join('\n')}\n\n*Total: ${money(order.total)} MXN*`;
   if (order.customer && order.customer.name) m += `\n\nNombre: ${order.customer.name}`;
   if (order.customer && order.customer.notes) m += `\nNotas: ${order.customer.notes}`;
@@ -1375,12 +1470,12 @@ async function checkout() {
   btn.disabled = true;
   btn.innerHTML = 'Preparando tu pedido…';
   try {
-    const r = await api('/api/orders', { method: 'POST', body: { items: lines.map((l) => ({ id: l.id, qty: l.qty })), customer: { name, notes } } });
+    const r = await api('/api/orders', { method: 'POST', body: { items: lines.map((l) => ({ id: l.id, qty: l.qty, size: l.size })), customer: { name, notes } } });
     const url = orderUrl(r.code);
     S.checkout = { url, text: orderMessage(r.order, url), saved: true };
   } catch (e) {
     if (e.status === 409) { toast(e.message, 'info'); await loadCatalog(); renderCart(); return; }
-    const order = { items: lines.map((l) => ({ name: l.p.name, qty: l.qty, price: l.p.price })), total: lines.reduce((s, l) => s + l.p.price * l.qty, 0), customer: { name, notes } };
+    const order = { items: lines.map((l) => ({ name: l.p.name, qty: l.qty, price: l.p.price, size: l.size })), total: lines.reduce((s, l) => s + l.p.price * l.qty, 0), customer: { name, notes } };
     S.checkout = { url: '', text: orderMessage(order, ''), saved: false };
   }
   renderCart();
@@ -1418,6 +1513,7 @@ function renderOrder() {
         <div class="line-img">${it.image ? `<img src="${esc(imgUrl(it.image))}" alt="">` : ''}</div>
         <div>
           <h4>${esc(it.name)}</h4>
+          ${it.size ? `<div class="muted">Talla <b style="color:var(--carbon)">${esc(it.size)}</b></div>` : ''}
           <span class="muted">${it.qty} × ${money(it.price)}</span>
           <div class="price">${money(it.price * it.qty)}</div>
           ${S.admin ? (it.sold
@@ -1815,7 +1911,7 @@ async function handleFiles(files) {
     try {
       const url = await uploadBlob(blob);
       if (target.kind === 'product' && S.editing) S.editing.images.push(url);
-      if (target.kind === 'category' && S.catDraft) S.catDraft[target.index].image = url;
+      if (target.kind === 'category' && S.catDraft) { S.catDraft[target.index].image = url; S.catDraft[target.index].mode = 'image'; }
       if (target.kind === 'page') await saveSettings({ [target.key]: url });
       done++;
     } catch (e) { toast(e.message, 'alert-circle'); }
@@ -1891,6 +1987,7 @@ function openEditor(id) {
     </div>
     <label class="lbl">Descripción<textarea class="textarea" data-f="description" rows="4" placeholder="Qué significa la pieza, cómo se siente al usarla…">${esc(e.description)}</textarea></label>
     <label class="lbl">Detalles <span class="muted">(material, medidas, cuidados)</span><textarea class="textarea" data-f="details" rows="3" placeholder="Acero inoxidable con baño de oro 18k&#10;Ajustable">${esc(e.details)}</textarea></label>
+    <label class="check"><input type="checkbox" data-f="ringSizes"${needsSize(e) ? ' checked' : ''}>Pedir talla de anillo (lista del 1 al 20)</label>
     <label class="check"><input type="checkbox" data-f="featured"${e.featured ? ' checked' : ''}>Destacar al inicio del catálogo</label>
     <label class="check"><input type="checkbox" data-f="available"${e.available !== false ? ' checked' : ''}>Disponible para venta</label>
   </div>`;
@@ -1978,6 +2075,7 @@ function renderPanel() {
   if (tab === 'products') body.innerHTML = panelProducts();
   if (tab === 'categories') body.innerHTML = panelCategories();
   if (tab === 'texts') body.innerHTML = panelTexts();
+  if (tab === 'colors') body.innerHTML = panelColors();
   if (tab === 'backups') { body.innerHTML = panelBackups(); if (!S.backups) loadBackups(); }
   if (tab === 'subs') { body.innerHTML = panelSubs(); if (!S.subs) loadSubs(); }
   icons();
@@ -2009,7 +2107,7 @@ function panelCategories() {
   if (!S.catDraft) S.catDraft = JSON.parse(JSON.stringify(S.categories));
   const d = S.catDraft;
   const count = (id) => S.products.filter((p) => p.category === id).length;
-  return `<p class="hint">Cambia el orden con las flechas, el nombre y el ícono. La foto es opcional: si no subes una, se usa la primera foto de una pieza de esa categoría.</p>
+  return `<p class="hint">Cambia el orden con las flechas, el nombre, el ícono y el fondo de cada categoría. En “Fondo” eliges si se muestra la foto de una pieza (cambia sola), una foto tuya fija o solo un color.</p>
     <div class="rows">${d.map((c, i) => `<div class="cat-row">
       <div class="move">
         <button class="icon-btn" data-act="cat-move" data-i="${i}" data-d="-1" aria-label="Subir"${i === 0 ? ' disabled' : ''}><i data-lucide="chevron-up"></i></button>
@@ -2024,11 +2122,43 @@ function panelCategories() {
           <span class="muted" style="margin-left:auto">${count(c.id)} piezas</span>
           <button class="icon-btn" data-act="cat-del" data-i="${i}" aria-label="Borrar categoría"><i data-lucide="trash-2"></i></button>
         </div>
+        <div class="line2" style="flex-wrap:wrap">
+          <label class="muted" style="display:flex;align-items:center;gap:6px">Fondo
+            <select class="select" data-catmode="${i}" style="min-height:36px;border-radius:8px">
+              <option value="auto"${catMode(c) === 'auto' ? ' selected' : ''}>Foto de una pieza (cambia sola)</option>
+              <option value="image"${catMode(c) === 'image' ? ' selected' : ''}>Mi foto fija</option>
+              <option value="color"${catMode(c) === 'color' ? ' selected' : ''}>Solo color</option>
+            </select></label>
+          <label class="muted" style="display:flex;align-items:center;gap:6px">Color
+            <input type="color" data-catbg="${i}" value="${isHex(c.bg) ? c.bg : colorVal('colorCat')}" style="width:40px;height:32px;border:1px solid var(--linea);border-radius:6px;padding:1px;background:#fff"></label>
+          ${isHex(c.bg) ? `<button class="btn btn-line btn-sm" data-act="cat-bg-reset" data-i="${i}">Color general</button>` : ''}
+        </div>
         ${S.iconOpen === i ? `<div class="icon-grid">${ICON_CHOICES.map((ic) => `<button data-act="cat-icon" data-i="${i}" data-icon="${ic}" aria-pressed="${ic === c.icon}" aria-label="${ic}"><i data-lucide="${ic}"></i></button>`).join('')}</div>` : ''}
       </div></div>`).join('')}</div>
     <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
       <button class="btn btn-line" data-act="cat-add"><i data-lucide="plus"></i>Agregar categoría</button>
       <button class="btn btn-dark" style="flex:1" data-act="cat-save"${S.uploading ? ' disabled' : ''}>Guardar categorías</button>
+    </div>`;
+}
+
+function panelColors() {
+  const pend = THEME.some((t) => t.k in S.pending);
+  return `<p class="hint">Elige una combinación lista o ajusta cada color. La vista previa cambia al momento; se guarda al tocar “Guardar colores”. El texto encima de cada fondo cambia solo a blanco u oscuro para que siempre se lea.</p>
+    <div class="mini" aria-hidden="true">
+      <div class="mini-hero">${esc(txt('heroTitle'))}</div>
+      <div class="mini-body"><span class="mini-cat"></span><span class="mini-card"></span><span class="price">${money(450)}</span><span class="btn btn-dark btn-sm">Agregar</span></div>
+      <div class="mini-soft">${esc(txt('value1Title'))}</div>
+      <div class="mini-foot">${esc(txt('brandName'))}</div>
+    </div>
+    <h3 class="panel-h">Combinaciones listas</h3>
+    <div class="presets">${PRESETS.map((pr, i) => `<button class="preset" data-act="theme-preset" data-i="${i}"><span class="dots">${['colorHero', 'colorAccent', 'colorCat', 'colorCard', 'colorGold'].map((k) => `<span style="background:${pr.c[k]}"></span>`).join('')}</span>${esc(pr.name)}</button>`).join('')}</div>
+    <h3 class="panel-h">Cada color</h3>
+    <div class="rows">${THEME.map((t) => `<label class="color-row"><input type="color" data-color="${t.k}" value="${colorVal(t.k)}" aria-label="${esc(t.label)}"><span>${esc(t.label)}</span><code>${colorVal(t.k)}</code></label>`).join('')}</div>
+    <p class="hint" style="margin-top:14px">Para cambiar el fondo de una sola categoría, ve a la pestaña Categorías.</p>
+    <div class="panel-save" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-line" data-act="theme-reset">Colores originales</button>
+      <button class="btn btn-line" data-act="discard-texts"${pend ? '' : ' disabled'}>Descartar</button>
+      <button class="btn btn-dark" style="flex:1" data-act="save-texts">Guardar colores</button>
     </div>`;
 }
 
@@ -2126,10 +2256,15 @@ document.addEventListener('click', async (e) => {
     case 'more': S.shown += 12; renderGrid(); icons(); break;
     case 'retry': S.loaded = false; renderGrid(); loadCatalog(); break;
     case 'pd-qty': S.pdQty = Math.max(1, S.pdQty + Number(t.dataset.d)); renderProduct(); break;
-    case 'pd-add': if (addToCart(id, S.pdQty)) { S.pdQty = 1; renderProduct(); } break;
+    case 'pd-add': {
+      const pp = S.products.find((x) => x.id === id);
+      if (pp && needsSize(pp) && !S.pdSize) { toast('Elige la talla del anillo', 'ruler'); const sel = $('#pdSize'); if (sel) sel.focus(); break; }
+      if (addToCart(id, S.pdQty, pp && needsSize(pp) ? S.pdSize : '')) { S.pdQty = 1; renderProduct(); }
+      break;
+    }
     case 'share-product': { const p = S.products.find((x) => x.id === id); shareLink(productUrl(id), p ? p.name + ' | Buenas Vibras' : 'Buenas Vibras'); break; }
-    case 'qty': { const l = S.cart.find((x) => x.id === id); const p = S.products.find((x) => x.id === id); if (l && p) { l.qty = Math.max(1, Math.min(p.stock, l.qty + Number(t.dataset.d))); saveCart(); renderCart(); } break; }
-    case 'rm': S.cart = S.cart.filter((x) => x.id !== id); saveCart(); renderCart(); break;
+    case 'qty': { const l = S.cart.find((x) => lineKey(x) === t.dataset.key); const p = l && S.products.find((x) => x.id === l.id); if (l && p) { const d = Number(t.dataset.d); if (d < 0) l.qty = Math.max(1, l.qty - 1); else if (cartQty(p.id) < p.stock) l.qty += 1; saveCart(); renderCart(); } break; }
+    case 'rm': S.cart = S.cart.filter((x) => lineKey(x) !== t.dataset.key); saveCart(); renderCart(); break;
     case 'checkout': checkout(); break;
     case 'wa-sent': S.cart = []; saveCart(); S.checkout.sent = true; break;
     case 'copy': copyText(t.dataset.copy); break;
@@ -2205,6 +2340,9 @@ document.addEventListener('click', async (e) => {
       break;
     }
     case 'crop-all': finishCrop('all'); break;
+    case 'theme-preset': { const pr = PRESETS[i]; THEME.forEach((t) => { S.pending[t.k] = pr.c[t.k]; }); applyTheme(); renderPanel(); showSaveBar(); toast(`Vista previa: ${pr.name}`, 'palette'); break; }
+    case 'theme-reset': THEME.forEach((t) => { S.pending[t.k] = ''; }); applyTheme(); renderPanel(); showSaveBar(); break;
+    case 'cat-bg-reset': S.catDraft[i].bg = ''; renderPanel(); break;
     case 'bk-now': try { t.disabled = true; const r = await api('/api/backups', { method: 'POST' }); S.backups = r.backups; renderPanel(); toast('Respaldo creado', 'check'); } catch (ex) { toast(ex.message, 'alert-circle'); t.disabled = false; } break;
     case 'bk-view': try { const r = await api('/api/backups/' + id); S.backupView = { ...r.backup, id }; renderPanel(); } catch (ex) { toast(ex.message, 'alert-circle'); } break;
     case 'bk-back': S.backupView = null; renderPanel(); break;
@@ -2237,6 +2375,13 @@ $('#tabs').addEventListener('click', (e) => {
 // Campos que se editan en vivo
 document.addEventListener('input', (e) => {
   const el = e.target;
+  if (el.dataset.color && S.admin) {
+    S.pending[el.dataset.color] = el.value.toUpperCase();
+    applyTheme();
+    const code = el.parentElement.querySelector('code'); if (code) code.textContent = el.value.toUpperCase();
+    showSaveBar();
+    return;
+  }
   const ed = el.closest && el.closest('.ed[contenteditable]');
   if (ed && S.admin) {
     const k = ed.dataset.text;
@@ -2263,6 +2408,15 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', (e) => {
   const el = e.target;
+  if (el.id === 'pdSize') { S.pdSize = el.value; return; }
+  if (el.dataset.catmode !== undefined && S.catDraft) {
+    const c = S.catDraft[Number(el.dataset.catmode)];
+    c.mode = el.value;
+    if (el.value === 'image' && !c.image) pickFiles({ kind: 'category', index: Number(el.dataset.catmode), ratio: 3 / 4 }, false);
+    renderPanel();
+    return;
+  }
+  if (el.dataset.catbg !== undefined && S.catDraft) { S.catDraft[Number(el.dataset.catbg)].bg = el.value; renderPanel(); return; }
   if (el.id === 'sort') { S.sort = el.value; renderGrid(); icons(); }
   if (el.dataset.f && S.editing) S.editing[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value;
 });
