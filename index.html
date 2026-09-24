@@ -6,16 +6,14 @@
 <title>Buenas Vibras Joyería</title>
 <meta name="description" content="Joyería delicada con intención. Anillos, collares, aretes y pulseras con envíos seguros a todo México.">
 <meta name="theme-color" content="#7D90B2">
-<link rel="canonical" href="https://buenasvibras.netlify.app/">
 
 <!-- Vista previa al compartir (WhatsApp / Facebook). Las rutas apuntan SIEMPRE a la URL oficial. -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Buenas Vibras Joyería">
 <meta property="og:title" content="Buenas Vibras Joyería">
 <meta property="og:description" content="Joyería delicada con intención. Envíos seguros a todo México.">
-<meta property="og:url" content="https://buenasvibras.netlify.app/">
-<meta property="og:image" content="https://buenasvibras.netlify.app/og-image.jpg?v=2">
-<meta property="og:image:secure_url" content="https://buenasvibras.netlify.app/og-image.jpg?v=2">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/robertoperez96/buenasvibras/og-image.jpg">
+<meta property="og:image:secure_url" content="https://cdn.jsdelivr.net/gh/robertoperez96/buenasvibras/og-image.jpg">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -23,7 +21,7 @@
 <meta property="og:locale" content="es_MX">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Buenas Vibras Joyería">
-<meta name="twitter:image" content="https://buenasvibras.netlify.app/og-image.jpg?v=2">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/robertoperez96/buenasvibras/og-image.jpg">
 <!-- Íconos: pestaña del navegador, pantalla de inicio del celular -->
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -553,7 +551,7 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
         <span class="brand-script ed" data-text="brandName">Buenas Vibras</span>
         <p class="ed" data-multi data-text="footerText">Joyería delicada con intención. Pedidos y dudas por WhatsApp, respondemos en horario de tienda.</p>
         <div class="social">
-          <a data-ig href="https://www.instagram.com/buenasvibras_8/" target="_blank" rel="noopener"><i data-lucide="instagram"></i><span data-ig-text>@buenasvibras_8</span></a>
+          <a data-ig href="https://www.instagram.com/buenasvibras_8" target="_blank" rel="noopener"><i data-lucide="instagram"></i><span data-ig-text>@buenasvibras_8</span></a>
           <a id="waFooter" href="#" target="_blank" rel="noopener"><i data-lucide="message-circle"></i>WhatsApp</a>
         </div>
       </div>
@@ -722,7 +720,10 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
    ═════════════════════════════════════════════════════════════ */
 // URL oficial: TODOS los enlaces que se comparten (productos y pedidos) usan esta base,
 // sin importar desde dónde se abra el sitio.
-const OFFICIAL_URL = 'https://buenasvibras.netlify.app';
+// Los enlaces que se comparten (pedidos y piezas) usan la dirección real donde está publicada la tienda.
+// Si algún día compras un dominio propio, escríbelo aquí, por ejemplo: 'https://buenasvibrasjoyeria.com'
+const CUSTOM_DOMAIN = '';
+const OFFICIAL_URL = CUSTOM_DOMAIN || (/^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? location.origin : '');
 // Dirección del Worker de Cloudflare (la ves en Cloudflare → Workers → buenasvibras).
 const API_URL = 'https://buenasvibras.roberto-perezc96.workers.dev';
 // WhatsApp de ventas: 52 + 10 dígitos, sin espacios ni signos.
@@ -951,7 +952,7 @@ function renderSettings() {
     el.textContent = k in S.pending ? (S.pending[k] || txt(k)) : txt(k);
   });
   $$('[data-icon-key]').forEach((el) => { const k = el.dataset.iconKey; el.innerHTML = `<i data-lucide="${esc(k in S.pending ? S.pending[k] : txt(k))}"></i>`; });
-  $$('[data-ig]').forEach((a) => { a.href = `https://www.instagram.com/${encodeURIComponent(igUser())}/`; });
+  $$('[data-ig]').forEach((a) => { a.href = `https://www.instagram.com/${encodeURIComponent(igUser())}`; });
   $$('[data-ig-text]').forEach((el) => { el.textContent = '@' + igUser(); });
   renderPageImage('heroArch', 'heroImage', 'Sube aquí la foto principal de la marca.');
   renderPageImage('aboutMedia', 'aboutImage', 'Sube aquí una foto para “Sobre nosotros”.');
@@ -1065,7 +1066,7 @@ function renderGrid() {
     return;
   }
   if (!S.products.length) {
-    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><i data-lucide="sparkles"></i><h3>${esc(txt('emptyTitle'))}</h3><p style="white-space:pre-line">${esc(txt('emptyText'))}</p>${S.admin ? '<button class="btn btn-dark" data-act="new-product"><i data-lucide="plus"></i>Agregar la primera pieza</button>' : '<a class="btn btn-line" href="https://www.instagram.com/${encodeURIComponent(igUser())}/" target="_blank" rel="noopener"><i data-lucide="instagram"></i>@${esc(igUser())}</a>'}</div>`;
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><i data-lucide="sparkles"></i><h3>${esc(txt('emptyTitle'))}</h3><p style="white-space:pre-line">${esc(txt('emptyText'))}</p>${S.admin ? '<button class="btn btn-dark" data-act="new-product"><i data-lucide="plus"></i>Agregar la primera pieza</button>' : `<a class="btn btn-line" href="https://www.instagram.com/${encodeURIComponent(igUser())}" target="_blank" rel="noopener"><i data-lucide="instagram"></i>@${esc(igUser())}</a>`}</div>`;
     return;
   }
   const list = visibleProducts();
