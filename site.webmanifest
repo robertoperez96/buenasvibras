@@ -1,0 +1,13 @@
+{
+  "name": "Buenas Vibras Joyería",
+  "short_name": "Buenas Vibras",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDFBF7",
+  "theme_color": "#8C9DBB",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/logo.png", "sizes": "1080x1080", "type": "image/png" }
+  ]
+}
