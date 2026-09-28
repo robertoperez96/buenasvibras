@@ -433,6 +433,7 @@ label.lbl{display:grid;gap:6px;font-size:.86rem;color:#4A4744}
 .size-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 @media (min-width:560px){.size-grid{grid-template-columns:repeat(5,1fr)}}
 .size-grid label{display:grid;gap:3px;font-size:.76rem;color:var(--gris)}
+@media (max-width:559px){.size-grid.letters{grid-template-columns:repeat(5,1fr)}}
 .size-grid .input{min-height:40px;padding:6px 8px;text-align:center}
 .size-pick select{max-width:220px}
 .size-pick a{color:var(--azul-hondo)}
@@ -881,16 +882,33 @@ function applyTheme() {
   if (meta) meta.setAttribute('content', colorVal('colorHero'));
 }
 
-/* Tallas de anillo */
+/* Opciones que elige la clienta: talla de anillo o inicial */
 const RING_SIZES = Array.from({ length: 20 }, (_, i) => String(i + 1));
-const needsSize = (p) => p.ringSizes === true || (p.ringSizes == null && /anillo/.test(norm(catName(p.category))));
+const LETTERS = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
+const OPTS = {
+  size: { keys: RING_SIZES, label: 'Talla', low: 'talla', title: 'Talla del anillo', choose: 'Elige tu talla', icon: 'ruler', btn: 'Elegir talla', editor: 'Talla de anillo (1 al 20)' },
+  letter: { keys: LETTERS, label: 'Inicial', low: 'inicial', title: 'Tu inicial', choose: 'Elige tu inicial', icon: 'type', btn: 'Elegir inicial', editor: 'Inicial (A a la Z)' },
+};
+function variantOf(p) {
+  if (p.variant === 'size' || p.variant === 'letter') return p.variant;
+  if (p.variant === '') return null;
+  if (p.ringSizes === true) return 'size';
+  if (p.ringSizes === false) return null;
+  const c = norm(catName(p.category));
+  if (/anillo/.test(c)) return 'size';
+  if (/inicial|letra/.test(c)) return 'letter';
+  return null;
+}
+const variantForCategory = (catId) => { const c = norm(catName(catId)); return /anillo/.test(c) ? 'size' : /inicial|letra/.test(c) ? 'letter' : ''; };
+const optOf = (p) => OPTS[variantOf(p)] || OPTS.size;
+const needsSize = (p) => !!variantOf(p);
 const lineKey = (l) => l.id + '~' + (l.size || '');
 const cartQty = (id) => S.cart.filter((l) => l.id === id).reduce((a, l) => a + l.qty, 0);
 const cartQtySize = (id, size) => S.cart.filter((l) => l.id === id && (l.size || '') === size).reduce((a, l) => a + l.qty, 0);
 const hasSizeStock = (p) => !!(p.sizeStock && typeof p.sizeStock === 'object');
 // Piezas de una talla según el inventario que puso la administradora
 const sizeAvail = (p, size) => (hasSizeStock(p) ? (Number(p.sizeStock[size]) || 0) : (p.stock | 0));
-const sizesInStock = (p) => RING_SIZES.filter((n) => sizeAvail(p, n) > 0);
+const sizesInStock = (p) => optOf(p).keys.filter((n) => sizeAvail(p, n) > 0);
 const sizeSum = (ss) => Object.values(ss || {}).reduce((a, v) => a + (Number(v) || 0), 0);
 const waNumber = () => { const d = txt('whatsapp').replace(/\D/g, ''); return d.length === 10 ? '52' + d : (d.length >= 11 ? d : WHATSAPP); };
 const igUser = () => txt('instagram').replace(/^@/, '').trim() || 'buenasvibras_8';
@@ -1134,7 +1152,7 @@ function cardHTML(p) {
       ${cat ? `<span class="card-cat">${esc(cat)}</span>` : ''}
       <h3 class="card-title"><button data-act="open" data-id="${p.id}">${esc(p.name)}</button></h3>
       <span class="price">${money(p.price)}${p.comparePrice ? `<s>${money(p.comparePrice)}</s>` : ''}</span>
-      <div class="card-actions"><button class="card-add" data-act="add" data-id="${p.id}"${out ? ' disabled' : ''}>${out ? 'Agotado' : needsSize(p) ? '<i data-lucide="ruler"></i>Elegir talla' : '<i data-lucide="plus"></i>Agregar'}</button></div>
+      <div class="card-actions"><button class="card-add" data-act="add" data-id="${p.id}"${out ? ' disabled' : ''}>${out ? 'Agotado' : needsSize(p) ? `<i data-lucide="${optOf(p).icon}"></i>${optOf(p).btn}` : '<i data-lucide="plus"></i>Agregar'}</button></div>
       ${S.admin ? `<div class="card-admin">
         <button data-act="edit" data-id="${p.id}"><i data-lucide="pencil"></i>Editar</button>
         <button class="alt" data-act="toggle-sold" data-id="${p.id}" title="${out ? 'Volver a mostrar como disponible' : 'Marcar como vendida'}">${out ? '<i data-lucide="rotate-ccw"></i>Reactivar' : '<i data-lucide="check"></i>Vendida'}</button>
@@ -1276,9 +1294,9 @@ function renderProduct() {
         ${p.description ? `<p class="pd-desc">${esc(p.description)}</p>` : ''}
         ${p.details ? `<div class="pd-details">${esc(p.details)}</div>` : ''}
         ${out ? `<a class="btn btn-wa" href="${waLink('Hola, ¿volverán a tener esta pieza? ' + p.name + '\n' + productUrl(p.id))}" target="_blank" rel="noopener"><i data-lucide="message-circle"></i>Preguntar si vuelve</a>` : `
-        ${sized ? `<label class="lbl size-pick">Talla del anillo
-          <select class="input" id="pdSize"><option value="">Elige tu talla</option>${sizesInStock(p).map((n) => { const left = sizeAvail(p, n) - cartQtySize(p.id, n); return `<option value="${n}"${S.pdSize === n ? ' selected' : ''}${left <= 0 ? ' disabled' : ''}>${n}${left <= 0 ? ' (ya en tu carrito)' : ''}</option>`; }).join('')}</select>
-          <span class="muted">¿No sabes tu talla? <a href="${waLink('Hola, ¿me ayudan a saber mi talla de anillo? Me interesa: ' + p.name)}" target="_blank" rel="noopener">Pregúntanos por WhatsApp</a></span>
+        ${sized ? `<label class="lbl size-pick">${optOf(p).title}
+          <select class="input" id="pdSize"><option value="">${optOf(p).choose}</option>${sizesInStock(p).map((n) => { const left = sizeAvail(p, n) - cartQtySize(p.id, n); return `<option value="${n}"${S.pdSize === n ? ' selected' : ''}${left <= 0 ? ' disabled' : ''}>${n}${left <= 0 ? ' (ya en tu carrito)' : ''}</option>`; }).join('')}</select>
+          ${variantOf(p) === 'size' ? `<span class="muted">¿No sabes tu talla? <a href="${waLink('Hola, ¿me ayudan a saber mi talla de anillo? Me interesa: ' + p.name)}" target="_blank" rel="noopener">Pregúntanos por WhatsApp</a></span>` : sizesInStock(p).length < optOf(p).keys.length ? `<span class="muted">¿No está tu inicial? <a href="${waLink('Hola, ¿tendrán la inicial que busco en ' + p.name + '?')}" target="_blank" rel="noopener">Pregúntanos por WhatsApp</a></span>` : ''}
         </label>` : ''}
         <div class="buy-row">
           <div class="qty" aria-label="Cantidad">
@@ -1294,7 +1312,7 @@ function renderProduct() {
           <button class="btn btn-line btn-sm" data-act="fav" data-id="${p.id}" aria-pressed="${fav}"><i data-lucide="heart"></i>${fav ? 'En favoritos' : 'Guardar'}</button>
         </div>
         ${S.admin ? `<div class="admin-note"><i data-lucide="shield-check"></i><div style="flex:1">
-          <div style="margin-bottom:8px">Inventario: <b>${p.stock}</b>${p.available === false ? ', marcada como vendida' : ''}${hasSizeStock(p) && sized ? `<br>Por talla: ${sizesInStock(p).map((n) => `${n} (${sizeAvail(p, n)})`).join(', ') || 'ninguna'}` : ''}</div>
+          <div style="margin-bottom:8px">Inventario: <b>${p.stock}</b>${p.available === false ? ', marcada como vendida' : ''}${hasSizeStock(p) && sized ? `<br>Por ${optOf(p).low}: ${sizesInStock(p).map((n) => `${n} (${sizeAvail(p, n)})`).join(', ') || 'ninguna'}` : ''}</div>
           <div class="pd-links">
             <button class="btn btn-dark btn-sm" data-act="edit" data-id="${p.id}"><i data-lucide="pencil"></i>Editar</button>
             <button class="btn btn-line btn-sm" data-act="toggle-sold" data-id="${p.id}">${out ? 'Reactivar' : 'Marcar vendida'}</button>
@@ -1400,20 +1418,20 @@ function addToCart(id, qty = 1, size = '') {
   if (needsSize(p) && !size) {
     stack.filter((l) => ['searchModal', 'favDrawer', 'cartDrawer'].includes(l.id)).forEach(closeLayer);
     if (S.current !== id) openProduct(id);
-    toast('Elige la talla del anillo', 'ruler');
+    toast(optOf(p).choose, optOf(p).icon);
     setTimeout(() => { const sel = $('#pdSize'); if (sel) sel.focus(); }, 350);
     return false;
   }
   let room = p.stock - cartQty(id);
   if (size) room = Math.min(room, sizeAvail(p, size) - cartQtySize(id, size));
   const add = Math.min(qty, room);
-  if (add <= 0 && size) { toast(`Ya no hay más en talla ${size}`, 'info'); return false; }
+  if (add <= 0 && size) { toast(`Ya no hay más en ${optOf(p).low} ${size}`, 'info'); return false; }
   if (add <= 0) { toast(`Solo hay ${p.stock} ${p.stock === 1 ? 'pieza disponible' : 'piezas disponibles'}`, 'info'); return false; }
   const line = S.cart.find((l) => l.id === id && (l.size || '') === size);
   if (line) line.qty += add; else S.cart.push(size ? { id, qty: add, size } : { id, qty: add });
   S.checkout = null;
   saveCart();
-  toast((add > 1 ? `Agregaste ${add} al carrito` : 'Agregada al carrito') + (size ? ` (talla ${size})` : ''), 'shopping-bag');
+  toast((add > 1 ? `Agregaste ${add} al carrito` : 'Agregada al carrito') + (size ? ` (${optOf(p).low} ${size})` : ''), 'shopping-bag');
   return true;
 }
 
@@ -1447,7 +1465,7 @@ function renderCart() {
       <button class="line-img" data-act="open" data-id="${p.id}" aria-label="Ver ${esc(p.name)}">${p.images && p.images[0] ? `<img src="${esc(imgUrl(p.images[0]))}" alt="">` : ''}</button>
       <div>
         <h4>${esc(p.name)}</h4>
-        <span class="price">${money(p.price)}</span>${l.size ? `<span class="line-size">Talla ${esc(l.size)}</span>` : ''}
+        <span class="price">${money(p.price)}</span>${l.size ? `<span class="line-size">${optOf(p).label} ${esc(l.size)}</span>` : ''}
         ${l.ok ? `<div><div class="qty">
           <button data-act="qty" data-key="${esc(l.key)}" data-d="-1" aria-label="Quitar uno"${l.qty <= 1 ? ' disabled' : ''}><i data-lucide="minus"></i></button>
           <span>${l.qty}</span>
@@ -1464,14 +1482,14 @@ function renderCart() {
     <p class="muted" style="margin:0;white-space:pre-line">${esc(txt('shippingNote'))}</p>
     <div class="fields">
       <label class="sr" for="cName">Tu nombre</label><input class="input" id="cName" placeholder="Tu nombre (opcional)" autocomplete="name" value="${esc(store.get('bv_name', ''))}">
-      <label class="sr" for="cNotes">Notas</label><textarea class="textarea" id="cNotes" rows="2" placeholder="Notas: talla, ciudad, si es regalo… (opcional)" style="min-height:64px"></textarea>
+      <label class="sr" for="cNotes">Notas</label><textarea class="textarea" id="cNotes" rows="2" placeholder="Notas: ciudad, si es regalo… (opcional)" style="min-height:64px"></textarea>
     </div>
     <button class="btn btn-dark btn-block" data-act="checkout" id="checkoutBtn"${any ? '' : ' disabled'}><i data-lucide="message-circle"></i>Confirmar pedido</button>`;
   icons();
 }
 
 function orderMessage(order, url) {
-  const lines = order.items.map((i) => `• ${i.qty} × ${i.name}${i.size ? ` (talla ${i.size})` : ''}: ${money(i.price)}${i.qty > 1 ? ` c/u = ${money(i.price * i.qty)}` : ''}`);
+  const lines = order.items.map((i) => `• ${i.qty} × ${i.name}${i.size ? ` (${i.variant === 'letter' ? 'inicial' : 'talla'} ${i.size})` : ''}: ${money(i.price)}${i.qty > 1 ? ` c/u = ${money(i.price * i.qty)}` : ''}`);
   let m = `${txt('orderIntro')}\n\n${lines.join('\n')}\n\n*Total: ${money(order.total)} MXN*`;
   if (order.customer && order.customer.name) m += `\n\nNombre: ${order.customer.name}`;
   if (order.customer && order.customer.notes) m += `\nNotas: ${order.customer.notes}`;
@@ -1494,7 +1512,7 @@ async function checkout() {
     S.checkout = { url, text: orderMessage(r.order, url), saved: true };
   } catch (e) {
     if (e.status === 409) { toast(e.message, 'info'); await loadCatalog(); renderCart(); return; }
-    const order = { items: lines.map((l) => ({ name: l.p.name, qty: l.qty, price: l.p.price, size: l.size })), total: lines.reduce((s, l) => s + l.p.price * l.qty, 0), customer: { name, notes } };
+    const order = { items: lines.map((l) => ({ name: l.p.name, qty: l.qty, price: l.p.price, size: l.size, variant: variantOf(l.p) })), total: lines.reduce((s, l) => s + l.p.price * l.qty, 0), customer: { name, notes } };
     S.checkout = { url: '', text: orderMessage(order, ''), saved: false };
   }
   renderCart();
@@ -1532,7 +1550,7 @@ function renderOrder() {
         <div class="line-img">${it.image ? `<img src="${esc(imgUrl(it.image))}" alt="">` : ''}</div>
         <div>
           <h4>${esc(it.name)}</h4>
-          ${it.size ? `<div class="muted">Talla <b style="color:var(--carbon)">${esc(it.size)}</b></div>` : ''}
+          ${it.size ? `<div class="muted">${it.variant === 'letter' ? 'Inicial' : 'Talla'} <b style="color:var(--carbon)">${esc(it.size)}</b></div>` : ''}
           <span class="muted">${it.qty} × ${money(it.price)}</span>
           <div class="price">${money(it.price * it.qty)}</div>
           ${S.admin ? (it.sold
@@ -1991,8 +2009,8 @@ function openEditor(id) {
     ? JSON.parse(JSON.stringify(p))
     : { name: '', price: '', comparePrice: '', category: (S.filter !== 'all' ? S.filter : (S.categories[0] || {}).id) || '', stock: 1, description: '', details: '', images: [], featured: false, available: true };
   $('#editTitle').textContent = p ? 'Editar pieza' : 'Nueva pieza';
-  S.editing.ringSizes = needsSize(S.editing);
-  if (S.editing.ringSizes && !hasSizeStock(S.editing)) S.editing.sizeStock = {};
+  S.editing.variant = variantOf(S.editing) || '';
+  if (S.editing.variant && !hasSizeStock(S.editing)) S.editing.sizeStock = {};
   const e = S.editing;
   $('#editBody').innerHTML = `<div class="form">
     <div><div class="lbl" style="margin-bottom:6px">Fotos <span class="muted">(la primera es la portada; se muestran completas, sin recortar)</span></div><div class="imgs" id="edImgs"></div>
@@ -2005,7 +2023,12 @@ function openEditor(id) {
     <div>
       <label class="lbl">Categoría<select class="input" data-f="category">${S.categories.map((c) => `<option value="${esc(c.id)}"${c.id === e.category ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}<option value=""${!e.category ? ' selected' : ''}>Sin categoría</option></select></label>
     </div>
-    <label class="check"><input type="checkbox" data-f="ringSizes"${e.ringSizes ? ' checked' : ''}>Es anillo: manejar inventario por talla (1 al 20)</label>
+    <label class="lbl">¿La clienta elige algo?
+      <select class="input" data-f="variant">
+        <option value=""${!e.variant ? ' selected' : ''}>No, pieza única o sin opciones</option>
+        <option value="size"${e.variant === 'size' ? ' selected' : ''}>${OPTS.size.editor}</option>
+        <option value="letter"${e.variant === 'letter' ? ' selected' : ''}>${OPTS.letter.editor}</option>
+      </select></label>
     <div id="edStock"></div>
     <label class="lbl">Descripción<textarea class="textarea" data-f="description" rows="4" placeholder="Qué significa la pieza, cómo se siente al usarla…">${esc(e.description)}</textarea></label>
     <label class="lbl">Detalles <span class="muted">(material, medidas, cuidados)</span><textarea class="textarea" data-f="details" rows="3" placeholder="Acero inoxidable con baño de oro 18k&#10;Ajustable">${esc(e.details)}</textarea></label>
@@ -2020,10 +2043,11 @@ function openEditor(id) {
 function renderEditorStock() {
   const e = S.editing, box = $('#edStock');
   if (!e || !box) return;
-  if (e.ringSizes) {
+  if (e.variant) {
+    const o = OPTS[e.variant];
     const ss = e.sizeStock || (e.sizeStock = {});
-    box.innerHTML = `<div class="lbl">Inventario por talla <span class="muted">(deja en 0 las tallas que no tengas; la clienta solo verá las que tengan piezas)</span></div>
-      <div class="size-grid">${RING_SIZES.map((n) => `<label><span>Talla ${n}</span><input class="input" type="number" inputmode="numeric" min="0" step="1" data-size-stock="${n}" value="${Number(ss[n]) || 0}"></label>`).join('')}</div>
+    box.innerHTML = `<div class="lbl">Inventario por ${o.low} <span class="muted">(deja en 0 ${e.variant === 'letter' ? 'las iniciales' : 'las tallas'} que no tengas; la clienta solo verá las que tengan piezas)</span></div>
+      <div class="size-grid${e.variant === 'letter' ? ' letters' : ''}">${o.keys.map((n) => `<label><span>${o.label} ${n}</span><input class="input" type="number" inputmode="numeric" min="0" step="1" data-size-stock="${n}" value="${Number(ss[n]) || 0}"></label>`).join('')}</div>
       <p class="muted" id="edStockTotal" style="margin:8px 0 0">Total: ${sizeSum(ss)} piezas</p>`;
   } else {
     box.innerHTML = `<label class="lbl">Piezas en inventario<input class="input" data-f="stock" type="number" inputmode="numeric" min="0" step="1" value="${esc(e.stock)}"></label>`;
@@ -2052,10 +2076,13 @@ async function saveProduct() {
   if (!String(e.name).trim()) { toast('Escribe el nombre de la pieza', 'info'); return; }
   if (e.price === '' || isNaN(Number(e.price))) { toast('Escribe el precio', 'info'); return; }
   if (S.uploading) { toast('Espera a que terminen de subir las fotos', 'info'); return; }
-  if (e.ringSizes) {
+  if (e.variant) {
+    const keys = OPTS[e.variant].keys;
+    e.sizeStock = Object.fromEntries(Object.entries(e.sizeStock || {}).filter(([k, v]) => keys.includes(k) && v > 0));
     e.stock = sizeSum(e.sizeStock);
-    if (!e.stock && !confirm('No pusiste piezas en ninguna talla, así que el anillo se verá agotado. ¿Guardar así?')) return;
-  } else e.sizeStock = null;
+    if (!e.stock && !confirm(`No pusiste piezas en ninguna ${OPTS[e.variant].low}, así que se verá agotada. ¿Guardar así?`)) return;
+    e.ringSizes = e.variant === 'size';
+  } else { e.sizeStock = null; e.ringSizes = false; }
   const btn = $('#saveProductBtn');
   btn.disabled = true; btn.textContent = 'Guardando…';
   try {
@@ -2074,7 +2101,7 @@ async function toggleSold(id) {
   const p = S.products.find((x) => x.id === id);
   if (!p) return;
   const reactivate = p.available === false || p.stock <= 0;
-  if (reactivate && hasSizeStock(p) && p.stock <= 0) { toast('Este anillo no tiene piezas en ninguna talla. Ponlas en Editar.', 'info', 4000); openEditor(id); return; }
+  if (reactivate && hasSizeStock(p) && p.stock <= 0) { toast(`No tiene piezas en ninguna ${optOf(p).low}. Ponlas en Editar.`, 'info', 4000); openEditor(id); return; }
   try {
     const r = await api('/api/products/' + id, { method: 'PATCH', body: reactivate ? (hasSizeStock(p) ? { available: true } : { available: true, stock: Math.max(1, p.stock) }) : { available: false } });
     S.products = r.products;
@@ -2298,8 +2325,8 @@ document.addEventListener('click', async (e) => {
     case 'pd-qty': S.pdQty = Math.max(1, S.pdQty + Number(t.dataset.d)); renderProduct(); break;
     case 'pd-add': {
       const pp = S.products.find((x) => x.id === id);
-      if (pp && needsSize(pp) && !S.pdSize) { toast('Elige la talla del anillo', 'ruler'); const sel = $('#pdSize'); if (sel) sel.focus(); break; }
-      if (addToCart(id, S.pdQty, pp && needsSize(pp) ? S.pdSize : '')) { S.pdQty = 1; renderProduct(); }
+      if (pp && needsSize(pp) && !S.pdSize) { toast(optOf(pp).choose, optOf(pp).icon); const sel = $('#pdSize'); if (sel) sel.focus(); break; }
+      if (addToCart(id, S.pdQty, pp && needsSize(pp) ? S.pdSize : '')) { S.pdQty = 1; if (S.pdSize && sizeAvail(pp, S.pdSize) - cartQtySize(id, S.pdSize) <= 0) S.pdSize = ''; renderProduct(); }
       break;
     }
     case 'share-product': { const p = S.products.find((x) => x.id === id); shareLink(productUrl(id), p ? p.name + ' | Buenas Vibras' : 'Buenas Vibras'); break; }
@@ -2467,12 +2494,12 @@ document.addEventListener('change', (e) => {
   if (el.id === 'sort') { S.sort = el.value; renderGrid(); icons(); }
   if (el.dataset.f && S.editing) S.editing[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value;
   if (el.dataset.f === 'category' && S.editing) {
-    S.editing.ringSizes = /anillo/.test(norm(catName(el.value)));
-    if (S.editing.ringSizes && !hasSizeStock(S.editing)) S.editing.sizeStock = {};
-    const cb = document.querySelector('#editBody [data-f="ringSizes"]'); if (cb) cb.checked = S.editing.ringSizes;
+    const v = variantForCategory(el.value);
+    if (v !== S.editing.variant) { S.editing.variant = v; S.editing.sizeStock = v ? {} : null; }
+    const sel = document.querySelector('#editBody [data-f="variant"]'); if (sel) sel.value = v;
     renderEditorStock();
   }
-  if (el.dataset.f === 'ringSizes' && S.editing) { if (el.checked && !hasSizeStock(S.editing)) S.editing.sizeStock = {}; renderEditorStock(); }
+  if (el.dataset.f === 'variant' && S.editing) { S.editing.sizeStock = el.value ? {} : null; renderEditorStock(); }
 });
 
 $('#fileInput').addEventListener('change', (e) => handleFiles(e.target.files));
