@@ -429,6 +429,34 @@ label.lbl{display:grid;gap:6px;font-size:.86rem;color:#4A4744}
 .img-edit-bar .btn{min-height:40px;font-size:.84rem;box-shadow:0 4px 18px rgba(30,35,50,.18)}
 .savebar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:55;background:#2F3A52;color:#fff;border-radius:999px;padding:6px 6px 6px 18px;display:flex;align-items:center;gap:8px;box-shadow:0 10px 30px rgba(20,25,40,.28);font-size:.88rem;width:max-content;max-width:calc(100% - 24px)}
 .savebar .btn{min-height:40px;font-size:.84rem;padding:0 1em}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:6px 0 4px}
+@media (min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:#fff;border:1px solid var(--linea);border-radius:var(--r-md);padding:12px 14px;display:grid;gap:2px;min-width:0}
+.kpi span{font-size:.78rem;color:var(--gris)}
+.kpi b{font-family:var(--serif);font-weight:400;font-size:1.55rem;color:var(--azul-hondo);line-height:1.15;overflow-wrap:anywhere}
+.kpi small{font-size:.74rem;color:var(--gris);line-height:1.3}
+.cat-report{display:grid;gap:8px}
+.cr-row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;text-align:left;background:#fff;border:1px solid var(--linea);border-radius:var(--r-md);padding:10px 12px;width:100%}
+.cr-row.on{border-color:var(--azul-hondo);box-shadow:0 0 0 1px var(--azul-hondo)}
+.cr-name{display:flex;align-items:center;gap:.45em;font-weight:500}
+.cr-name svg{width:16px;height:16px;color:var(--oro)}
+.cr-val{font-weight:500;color:var(--azul-hondo);font-variant-numeric:tabular-nums}
+.cr-sub{font-size:.78rem;color:var(--gris)}
+.cr-pct{font-size:.78rem;color:var(--gris);text-align:right}
+.cr-bar{grid-column:1/-1;height:6px;border-radius:3px;background:var(--niebla);overflow:hidden;margin-top:4px}
+.cr-bar i{display:block;height:100%;background:var(--azul-hondo);border-radius:3px}
+.alert-box{background:#fff;border:1px solid var(--linea);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px}
+.alert-box summary{cursor:pointer;display:flex;align-items:center;gap:.5em;font-size:.92rem}
+.alert-box summary svg{width:16px;height:16px;color:var(--alerta)}
+.alert-box summary b{margin-left:auto;color:var(--alerta)}
+.alert-box ul{margin:8px 0 0;padding-left:18px;font-size:.88rem}
+.alert-box li button{color:var(--azul-hondo);text-decoration:underline;text-align:left}
+.two-col{display:grid;gap:14px;margin-top:10px}
+@media (min-width:640px){.two-col{grid-template-columns:1fr 1fr}}
+.mini-h{margin:0 0 6px;font-weight:500;font-size:.9rem}
+.rank{margin:0;padding-left:20px;font-size:.88rem;display:grid;gap:4px}
+.rank li span{display:inline-block;max-width:70%}
+.rank li b{float:right;font-weight:500;color:var(--azul-hondo)}
 .size-pick{margin:0}
 .size-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 @media (min-width:560px){.size-grid{grid-template-columns:repeat(5,1fr)}}
@@ -678,6 +706,7 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
     <div class="layer-head"><h2>Panel</h2><button class="icon-btn" data-act="close" aria-label="Cerrar"><i data-lucide="x"></i></button></div>
     <div class="tabs" role="tablist" id="tabs">
       <button class="tab" role="tab" data-tab="products"><i data-lucide="gem"></i>Piezas</button>
+      <button class="tab" role="tab" data-tab="report"><i data-lucide="chart-column"></i>Inventario y ventas</button>
       <button class="tab" role="tab" data-tab="categories"><i data-lucide="layout-grid"></i>Categorías</button>
       <button class="tab" role="tab" data-tab="texts"><i data-lucide="type"></i>Textos y fotos</button>
       <button class="tab" role="tab" data-tab="colors"><i data-lucide="palette"></i>Colores</button>
@@ -1004,7 +1033,7 @@ async function loadCatalog() {
   try {
     const d = await api('/api/catalog');
     applyCatalog(d);
-    store.set('bv_catalog', d);
+    cacheCatalog();
     S.loadError = '';
   } catch (e) {
     if (!cached) S.loadError = 'No pudimos cargar el catálogo. Revisa tu conexión e intenta de nuevo.';
@@ -1014,7 +1043,7 @@ async function loadCatalog() {
 }
 
 function cacheCatalog() {
-  store.set('bv_catalog', { products: S.products, categories: S.categories, settings: S.settings });
+  store.set('bv_catalog', { products: S.products.map(({ cost, ...p }) => p), categories: S.categories, settings: S.settings });
 }
 
 function visibleProducts() {
@@ -1312,7 +1341,7 @@ function renderProduct() {
           <button class="btn btn-line btn-sm" data-act="fav" data-id="${p.id}" aria-pressed="${fav}"><i data-lucide="heart"></i>${fav ? 'En favoritos' : 'Guardar'}</button>
         </div>
         ${S.admin ? `<div class="admin-note"><i data-lucide="shield-check"></i><div style="flex:1">
-          <div style="margin-bottom:8px">Inventario: <b>${p.stock}</b>${p.available === false ? ', marcada como vendida' : ''}${hasSizeStock(p) && sized ? `<br>Por ${optOf(p).low}: ${sizesInStock(p).map((n) => `${n} (${sizeAvail(p, n)})`).join(', ') || 'ninguna'}` : ''}</div>
+          <div style="margin-bottom:8px">Inventario: <b>${p.stock}</b>${p.cost != null ? `, costo ${money(p.cost)} c/u` : ''}${p.available === false ? ', marcada como vendida' : ''}${hasSizeStock(p) && sized ? `<br>Por ${optOf(p).low}: ${sizesInStock(p).map((n) => `${n} (${sizeAvail(p, n)})`).join(', ') || 'ninguna'}` : ''}</div>
           <div class="pd-links">
             <button class="btn btn-dark btn-sm" data-act="edit" data-id="${p.id}"><i data-lucide="pencil"></i>Editar</button>
             <button class="btn btn-line btn-sm" data-act="toggle-sold" data-id="${p.id}">${out ? 'Reactivar' : 'Marcar vendida'}</button>
@@ -1627,6 +1656,7 @@ async function verifySession() {
     await api('/api/session');
     S.admin = true;
     refreshAdminViews();
+    loadCatalog();
   } catch (e) {
     if (e.status === 401) endSessionLocally();
   }
@@ -1640,7 +1670,8 @@ function refreshAdminViews() {
 
 function endSessionLocally(msg) {
   const was = S.admin;
-  S.token = ''; S.admin = false; S.pending = {};
+  S.token = ''; S.admin = false; S.pending = {}; S.sales = null; S.orders = null;
+  S.products = S.products.map(({ cost, ...p }) => p);
   store.del('bv_token');
   ['editModal', 'panelModal'].forEach((id) => closeLayer(id));
   refreshAdminViews();
@@ -1663,6 +1694,7 @@ async function doLogin(e) {
     $('#loginPass').value = '';
     closeLayer('loginModal');
     refreshAdminViews();
+    loadCatalog();
     toast('Listo. Toca cualquier texto con borde punteado para editarlo.', 'shield-check', 5000);
   } catch (ex) {
     err.textContent = ex.message; err.hidden = false;
@@ -2020,6 +2052,7 @@ function openEditor(id) {
       <label class="lbl">Precio (MXN)<input class="input" data-f="price" type="number" inputmode="decimal" min="0" step="1" value="${esc(e.price)}"></label>
       <label class="lbl">Precio anterior <span class="muted">(opcional, para ofertas)</span><input class="input" data-f="comparePrice" type="number" inputmode="decimal" min="0" step="1" value="${esc(e.comparePrice ?? '')}"></label>
     </div>
+    <label class="lbl">Costo por pieza <span class="muted">(privado: solo tú lo ves; sirve para calcular tu ganancia)</span><input class="input" data-f="cost" type="number" inputmode="decimal" min="0" step="1" value="${esc(e.cost ?? '')}" placeholder="Opcional"></label>
     <div>
       <label class="lbl">Categoría<select class="input" data-f="category">${S.categories.map((c) => `<option value="${esc(c.id)}"${c.id === e.category ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}<option value=""${!e.category ? ' selected' : ''}>Sin categoría</option></select></label>
     </div>
@@ -2086,7 +2119,7 @@ async function saveProduct() {
   const btn = $('#saveProductBtn');
   btn.disabled = true; btn.textContent = 'Guardando…';
   try {
-    const r = await api('/api/products', { method: 'POST', body: { ...e, price: Number(e.price), comparePrice: e.comparePrice === '' ? null : Number(e.comparePrice), stock: Number(e.stock) } });
+    const r = await api('/api/products', { method: 'POST', body: { ...e, price: Number(e.price), comparePrice: e.comparePrice === '' ? null : Number(e.comparePrice), cost: e.cost === '' || e.cost == null ? null : Number(e.cost), stock: Number(e.stock) } });
     S.products = r.products;
     cacheCatalog();
     closeLayer('editModal');
@@ -2140,12 +2173,184 @@ function renderPanel() {
   const body = $('#panelBody');
   const tab = S.panelTab;
   if (tab === 'products') body.innerHTML = panelProducts();
+  if (tab === 'report') { body.innerHTML = panelReport(); if (!S.sales || !S.orders) loadReportData(); }
   if (tab === 'categories') body.innerHTML = panelCategories();
   if (tab === 'texts') body.innerHTML = panelTexts();
   if (tab === 'colors') body.innerHTML = panelColors();
   if (tab === 'backups') { body.innerHTML = panelBackups(); if (!S.backups) loadBackups(); }
   if (tab === 'subs') { body.innerHTML = panelSubs(); if (!S.subs) loadSubs(); }
   icons();
+}
+
+/* ═════════════════════════════ Reporte de inventario (solo administradora) ═════════════════════════════ */
+const pl = (n, one, many) => `${n.toLocaleString('es-MX')} ${n === 1 ? one : many}`;
+const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0);
+const monthName = (key) => { const [y, m] = key.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 15)).toLocaleDateString('es-MX', { month: 'long', year: 'numeric', timeZone: 'UTC' }); };
+const mxMonthKey = (ts) => { const d = new Date(ts - 6 * 3600 * 1000); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0'); };
+const units = (p) => (p.available === false ? 0 : Math.max(0, p.stock | 0));
+
+function inventoryStats() {
+  const groups = new Map();
+  const known = new Set(S.categories.map((c) => c.id));
+  for (const c of S.categories) groups.set(c.id, { id: c.id, name: c.name, icon: c.icon, items: [] });
+  for (const p of S.products) {
+    const id = known.has(p.category) ? p.category : '__none';
+    if (!groups.has(id)) groups.set(id, { id, name: 'Sin categoría', icon: 'circle-help', items: [] });
+    groups.get(id).items.push(p);
+  }
+  const sum = (items) => {
+    const r = { models: items.length, inStock: 0, units: 0, value: 0, cost: 0, costUnits: 0, valueCosted: 0 };
+    for (const p of items) {
+      const u = units(p);
+      if (u > 0) r.inStock++;
+      r.units += u;
+      r.value += u * (Number(p.price) || 0);
+      if (p.cost != null) { r.cost += u * Number(p.cost); r.costUnits += u; r.valueCosted += u * (Number(p.price) || 0); }
+    }
+    r.profit = r.costUnits ? r.valueCosted - r.cost : null; // solo con las piezas que tienen costo
+    return r;
+  };
+  const cats = [...groups.values()].map((g) => ({ ...g, ...sum(g.items) }));
+  return { all: sum(S.products), cats };
+}
+
+function reportCSV() {
+  const rows = [['Categoría', 'Pieza', 'Precio', 'Precio anterior', 'Costo', 'Unidades disponibles', 'Valor a precio publicado', 'Costo total', 'Ganancia estimada', 'Opciones', 'Estado']];
+  for (const p of S.products) {
+    const u = units(p);
+    const opts = hasSizeStock(p) && needsSize(p) ? sizesInStock(p).map((k) => `${optOf(p).label} ${k}: ${sizeAvail(p, k)}`).join(' | ') : '';
+    rows.push([catName(p.category) || 'Sin categoría', p.name, p.price, p.comparePrice ?? '', p.cost ?? '', u, u * p.price,
+      p.cost != null ? u * p.cost : '', p.cost != null ? u * (p.price - p.cost) : '', opts, p.available === false ? 'Marcada vendida' : u ? 'Disponible' : 'Agotada']);
+  }
+  return rows;
+}
+
+function salesCSV() {
+  const rows = [['Fecha', 'Pedido', 'Categoría', 'Pieza', 'Opción', 'Cantidad', 'Precio', 'Total', 'Costo total', 'Ganancia']];
+  for (const s of S.sales || []) {
+    rows.push([new Date(s.ts).toLocaleString('es-MX'), s.code.toUpperCase(), catName(s.category) || '', s.name, s.size ? `${s.variant === 'letter' ? 'Inicial' : 'Talla'} ${s.size}` : '',
+      s.qty, s.price, s.total, s.cost != null ? s.cost * s.qty : '', s.cost != null ? s.total - s.cost * s.qty : '']);
+  }
+  return rows;
+}
+
+function downloadCSV(rows, name) {
+  const csv = '\ufeff' + rows.map((r) => r.map((v) => { const t = String(v ?? ''); return /[",\n;]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; }).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('Archivo descargado', 'download');
+}
+
+async function loadReportData() {
+  try {
+    const [s, o] = await Promise.all([api('/api/sales?months=12'), api('/api/orders')]);
+    S.sales = s.sales; S.orders = o.orders;
+  } catch (e) { S.sales = S.sales || []; S.orders = S.orders || []; toast(e.message, 'alert-circle'); }
+  if (S.panelTab === 'report') renderPanel();
+}
+
+function panelReport() {
+  const { all, cats } = inventoryStats();
+  const anyCost = S.products.some((p) => p.cost != null);
+  const missingCost = S.products.filter((p) => units(p) > 0 && p.cost == null).length;
+  const sel = S.reportCat || 'all';
+  const card = (label, value, sub = '') => `<div class="kpi"><span>${label}</span><b>${value}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
+
+  // Tarjetas generales
+  let h = `<p class="hint">Solo tú ves esta sección. El costo de cada pieza es privado: nunca se muestra en la tienda. Las cuentas usan las piezas disponibles (no cuentan las agotadas ni las marcadas como vendidas).</p>
+    <div class="kpis">
+      ${card('Valor del inventario', money(all.value), 'si se vendiera todo al precio publicado')}
+      ${card('Piezas disponibles', all.units.toLocaleString('es-MX'), `${all.inStock} de ${all.models} modelos con existencias`)}
+      ${card('Precio promedio', money(all.units ? all.value / all.units : 0), 'por pieza disponible')}
+      ${anyCost ? card('Ganancia estimada', money(all.profit || 0), `costo ${money(all.cost)}, margen ${pct(all.profit || 0, all.valueCosted)}%${all.costUnits < all.units ? `, con ${all.costUnits} de ${all.units} piezas con costo` : ''}`) : card('Ganancia estimada', '—', 'captura el costo en cada pieza')}
+    </div>`;
+
+  // Por categoría
+  h += `<h3 class="panel-h">Por categoría</h3>
+    <div class="cat-report">
+      <button class="cr-row${sel === 'all' ? ' on' : ''}" data-act="report-cat" data-id="all">
+        <span class="cr-name"><i data-lucide="layers"></i>Todas</span><span class="cr-val">${money(all.value)}</span>
+        <span class="cr-sub">${pl(all.units, 'pieza', 'piezas')}, ${pl(all.models, 'modelo', 'modelos')}</span><span class="cr-pct">100%</span>
+        <span class="cr-bar"><i style="width:100%"></i></span>
+      </button>
+      ${cats.map((c) => `<button class="cr-row${sel === c.id ? ' on' : ''}" data-act="report-cat" data-id="${esc(c.id)}">
+        <span class="cr-name"><i data-lucide="${esc(c.icon || 'gem')}"></i>${esc(c.name)}</span><span class="cr-val">${money(c.value)}</span>
+        <span class="cr-sub">${pl(c.units, 'pieza', 'piezas')}, ${pl(c.models, 'modelo', 'modelos')}${c.costUnits ? `, ganancia ${money(c.profit)}` : ''}</span><span class="cr-pct">${pct(c.value, all.value)}%</span>
+        <span class="cr-bar"><i style="width:${pct(c.value, all.value)}%"></i></span>
+      </button>`).join('')}
+    </div>`;
+
+  // Detalle de la categoría elegida
+  const items = (sel === 'all' ? S.products : (cats.find((c) => c.id === sel) || { items: [] }).items).slice()
+    .sort((a, b) => units(b) * b.price - units(a) * a.price);
+  const selName = sel === 'all' ? 'todas las categorías' : (cats.find((c) => c.id === sel) || {}).name || '';
+  h += `<h3 class="panel-h">Piezas de ${esc(selName)}</h3>
+    <div class="rows">${items.map((p) => {
+      const u = units(p);
+      const opts = hasSizeStock(p) && needsSize(p) ? sizesInStock(p).map((k) => `${k} (${sizeAvail(p, k)})`).join(', ') : '';
+      return `<div class="row">
+        <div class="row-img">${p.images && p.images[0] ? `<img src="${esc(imgUrl(p.images[0]))}" alt="">` : '<i data-lucide="gem"></i>'}</div>
+        <div style="min-width:0"><h4>${esc(p.name)}${!u ? '<span class="pill no">Sin existencias</span>' : u <= 2 ? '<span class="pill star">Pocas</span>' : ''}</h4>
+          <span class="muted">${u} × ${money(p.price)} = <b style="color:var(--carbon)">${money(u * p.price)}</b>${p.cost != null ? `, costo ${money(p.cost)} c/u, ganancia ${money(u * (p.price - p.cost))}` : ''}${opts ? `<br>${optOf(p).label}: ${opts}` : ''}</span></div>
+        <div class="row-actions"><button class="icon-btn" data-act="edit" data-id="${p.id}" aria-label="Editar ${esc(p.name)}"><i data-lucide="pencil"></i></button></div>
+      </div>`;
+    }).join('') || '<p class="muted">No hay piezas en esta categoría.</p>'}</div>`;
+
+  // Alertas
+  const out = S.products.filter((p) => units(p) === 0);
+  const low = S.products.filter((p) => units(p) > 0 && units(p) <= 2);
+  const noPhoto = S.products.filter((p) => !p.images || !p.images.length);
+  const alert = (icon, title, list, extra = '') => list.length ? `<details class="alert-box"><summary><i data-lucide="${icon}"></i>${title} <b>${list.length}</b></summary>${extra}<ul>${list.map((p) => `<li><button data-act="edit" data-id="${p.id}">${esc(p.name)}</button></li>`).join('')}</ul></details>` : '';
+  const alerts = alert('circle-slash', 'Agotadas o marcadas vendidas', out)
+    + alert('triangle-alert', 'Quedan 2 o menos', low)
+    + alert('image-off', 'Sin foto', noPhoto)
+    + (missingCost && anyCost ? alert('calculator', 'Disponibles sin costo capturado', S.products.filter((p) => units(p) > 0 && p.cost == null), '<p class="muted" style="margin:6px 0">Captura el costo para que la ganancia salga completa.</p>') : '');
+  h += `<h3 class="panel-h">Avisos</h3>${alerts || '<p class="muted">Todo en orden: no hay piezas agotadas, con pocas existencias ni sin foto.</p>'}`;
+
+  // Ventas
+  if (!S.sales) h += `<h3 class="panel-h">Ventas</h3><p class="muted">Cargando ventas…</p>`;
+  else {
+    const now = mxMonthKey(Date.now());
+    const prevD = new Date(Date.now() - 6 * 3600 * 1000); prevD.setUTCDate(1); prevD.setUTCMonth(prevD.getUTCMonth() - 1);
+    const prev = prevD.getUTCFullYear() + '-' + String(prevD.getUTCMonth() + 1).padStart(2, '0');
+    const tot = (list) => ({ money: list.reduce((a, s) => a + s.total, 0), qty: list.reduce((a, s) => a + s.qty, 0), profit: list.every((s) => s.cost != null) && list.length ? list.reduce((a, s) => a + s.total - s.cost * s.qty, 0) : null });
+    const thisM = tot(S.sales.filter((s) => mxMonthKey(s.ts) === now));
+    const prevM = tot(S.sales.filter((s) => mxMonthKey(s.ts) === prev));
+    const year = tot(S.sales);
+    const top = Object.values(S.sales.reduce((acc, s) => { (acc[s.id] = acc[s.id] || { name: s.name, qty: 0, total: 0 }); acc[s.id].qty += s.qty; acc[s.id].total += s.total; return acc; }, {})).sort((a, b) => b.qty - a.qty).slice(0, 5);
+    const byCat = Object.entries(S.sales.reduce((acc, s) => { const k = catName(s.category) || 'Sin categoría'; acc[k] = (acc[k] || 0) + s.total; return acc; }, {})).sort((a, b) => b[1] - a[1]);
+    h += `<h3 class="panel-h">Ventas</h3>
+      <p class="hint" style="margin-top:0">Se cuentan las piezas que marcas como vendidas desde el resumen de un pedido.</p>
+      <div class="kpis">
+        ${card(`Este mes (${monthName(now)})`, money(thisM.money), `${pl(thisM.qty, 'pieza', 'piezas')}${thisM.profit != null ? `, ganancia ${money(thisM.profit)}` : ''}`)}
+        ${card('Mes pasado', money(prevM.money), pl(prevM.qty, 'pieza', 'piezas'))}
+        ${card('Últimos 12 meses', money(year.money), `${pl(year.qty, 'pieza', 'piezas')}${year.profit != null ? `, ganancia ${money(year.profit)}` : ''}`)}
+      </div>
+      ${top.length ? `<div class="two-col"><div><h4 class="mini-h">Más vendidas</h4><ol class="rank">${top.map((t) => `<li><span>${esc(t.name)}</span><b>${t.qty}</b></li>`).join('')}</ol></div>
+        <div><h4 class="mini-h">Ventas por categoría</h4><ol class="rank">${byCat.map(([k, v]) => `<li><span>${esc(k)}</span><b>${money(v)}</b></li>`).join('')}</ol></div></div>` : '<p class="muted">Aún no hay ventas registradas.</p>'}`;
+  }
+
+  // Pedidos
+  if (S.orders) {
+    const pend = S.orders.filter((o) => o.status === 'pending' || o.status === 'partial');
+    const label = { pending: 'Pendiente', partial: 'Vendido en parte', sold: 'Vendido' };
+    h += `<h3 class="panel-h">Pedidos recientes <span class="muted" style="font-family:var(--sans);font-size:.85rem">(${pend.length} sin marcar como vendidos)</span></h3>
+      <div class="rows">${S.orders.slice(0, S.ordersShown || 10).map((o) => `<button class="bk" data-act="report-order" data-id="${esc(o.code)}" style="text-align:left;width:100%">
+        <i data-lucide="${o.status === 'sold' ? 'circle-check' : 'clock'}"></i>
+        <span class="bk-info"><strong>${esc(o.code.toUpperCase())}${o.name ? ' · ' + esc(o.name) : ''}</strong><span class="muted">${o.ts ? new Date(o.ts).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : 'Pedido anterior'}${o.n ? `, ${pl(o.n, 'pieza', 'piezas')}` : ''}</span></span>
+        <span style="text-align:right">${o.total != null ? `<b>${money(o.total)}</b><br>` : ''}<span class="pill${o.status === 'sold' ? '' : ' star'}">${label[o.status] || 'Ver'}</span></span>
+      </button>`).join('') || '<p class="muted">Aún no hay pedidos.</p>'}</div>
+      ${S.orders.length > (S.ordersShown || 10) ? '<button class="btn btn-line btn-sm" style="margin-top:10px" data-act="report-more">Ver más pedidos</button>' : ''}`;
+  }
+
+  // Descargas
+  h += `<h3 class="panel-h">Descargar para Excel</h3>
+    <div class="pd-links"><button class="btn btn-line btn-sm" data-act="csv-inventory"><i data-lucide="download"></i>Inventario completo</button>
+    <button class="btn btn-line btn-sm" data-act="csv-sales"${S.sales && S.sales.length ? '' : ' disabled'}><i data-lucide="download"></i>Ventas</button></div>`;
+  return h;
 }
 
 function panelProducts() {
@@ -2425,6 +2630,11 @@ document.addEventListener('click', async (e) => {
       } catch (ex) { toast(ex.message, 'alert-circle'); t.disabled = false; }
       break;
     }
+    case 'report-cat': S.reportCat = id; renderPanel(); break;
+    case 'report-more': S.ordersShown = (S.ordersShown || 10) + 20; renderPanel(); break;
+    case 'report-order': closeLayer('panelModal'); openOrder(id); break;
+    case 'csv-inventory': downloadCSV(reportCSV(), `inventario-buenas-vibras-${new Date().toISOString().slice(0, 10)}.csv`); break;
+    case 'csv-sales': downloadCSV(salesCSV(), `ventas-buenas-vibras-${new Date().toISOString().slice(0, 10)}.csv`); break;
     case 'subs-copy': copyText(S.subs.map((s) => s.email).join(', '), 'Correos copiados'); break;
   }
 });
@@ -2436,6 +2646,7 @@ $('#tabs').addEventListener('click', (e) => {
   S.panelTab = t.dataset.tab; S.backupView = null; S.iconOpen = -1;
   if (t.dataset.tab === 'backups') S.backups = null;
   if (t.dataset.tab === 'subs') S.subs = null;
+  if (t.dataset.tab === 'report') { S.sales = null; S.orders = null; }
   renderPanel();
 });
 
