@@ -120,7 +120,7 @@ svg.lucide{width:1.25em;height:1.25em;stroke-width:1.5;flex:none}
   .nav-left{display:none}
   .brand{align-items:flex-start;justify-self:start}
   .brand-script{font-size:2.3rem}
-  .nav-links{display:flex;gap:30px;justify-content:center}
+  .nav-links{display:flex;gap:clamp(16px,2.2vw,30px);justify-content:center}
   .nav-links a{text-decoration:none;font-size:.92rem;color:var(--carbon);padding:6px 0;border-bottom:1px solid transparent;transition:border-color .2s,color .2s}
   .nav-links a:hover{color:var(--azul-hondo);border-bottom-color:var(--azul)}
 }
@@ -543,7 +543,7 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
       <span class="brand-script" data-text="brandName">Buenas Vibras</span><span class="brand-sub" data-text="brandTagline">JOYERÍA</span>
     </a>
     <nav class="nav-links" aria-label="Principal">
-      <a href="#inicio">Inicio</a><a href="#catalogo">Catálogo</a><a href="#colecciones">Colecciones</a><a href="#resenas" class="rev-link" hidden>Reseñas</a><a href="#nosotros">Sobre nosotros</a><a href="#contacto">Contacto</a>
+      <a href="#inicio">Inicio</a><a href="#catalogo">Catálogo</a><a href="#colecciones">Colecciones</a><a href="#nosotros">Sobre nosotros</a><a href="#resenas">Reseñas</a><a href="#contacto">Contacto</a>
     </nav>
     <div class="nav-icons">
       <button class="icon-btn" data-act="search" aria-label="Buscar"><i data-lucide="search"></i></button>
@@ -619,7 +619,7 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
     </div>
   </section>
 
-  <section class="section reviews-sec" id="resenas" hidden>
+  <section class="section reviews-sec" id="resenas">
     <div class="wrap">
       <div class="section-head"><div><h2 class="t-section ed" data-text="reviewsTitle"></h2><p class="t-lead" id="reviewsSummary"></p></div></div>
       <div class="reviews" id="reviewsList"></div>
@@ -654,8 +654,8 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
         <ul class="foot-links">
           <li><a href="#catalogo">Catálogo</a></li>
           <li><a href="#colecciones">Colecciones</a></li>
-          <li class="rev-link" hidden><a href="#resenas">Reseñas</a></li>
           <li><a href="#nosotros">Sobre nosotros</a></li>
+          <li><a href="#resenas">Reseñas</a></li>
           <li><button data-act="favs">Mis favoritos</button></li>
         </ul>
       </div>
@@ -690,8 +690,8 @@ body:has(#saveBar:not([hidden])) .toast{bottom:calc(84px + env(safe-area-inset-b
       <li><a href="#inicio" data-act="nav">Inicio<i data-lucide="chevron-right"></i></a></li>
       <li><a href="#catalogo" data-act="nav">Catálogo<i data-lucide="chevron-right"></i></a></li>
       <li><a href="#colecciones" data-act="nav">Colecciones<i data-lucide="chevron-right"></i></a></li>
-      <li class="rev-link" hidden><a href="#resenas" data-act="nav">Reseñas<i data-lucide="chevron-right"></i></a></li>
       <li><a href="#nosotros" data-act="nav">Sobre nosotros<i data-lucide="chevron-right"></i></a></li>
+      <li><a href="#resenas" data-act="nav">Reseñas<i data-lucide="chevron-right"></i></a></li>
       <li><a href="#contacto" data-act="nav">Contacto<i data-lucide="chevron-right"></i></a></li>
     </ul>
   </div>
@@ -2261,11 +2261,11 @@ function renderReviews() {
   const list = S.reviews || [];
   const sec = $('#resenas');
   if (!sec) return;
-  sec.hidden = !list.length && !S.admin;
-  $$('.rev-link').forEach((a) => { a.hidden = !list.length; });
   if (!list.length) {
-    $('#reviewsSummary').textContent = S.admin ? 'Aquí aparecerán las reseñas que publiques. Solo tú ves este aviso.' : '';
-    $('#reviewsList').innerHTML = S.admin ? `<div class="empty" style="grid-column:1/-1"><i data-lucide="message-square-heart"></i><h3>Aún no hay reseñas publicadas</h3><p>Cuando marques un pedido como vendido, mándale a tu clienta el enlace de su pedido: ahí puede calificar sus piezas. Las revisas y publicas en Panel → Reseñas.</p></div>` : '';
+    $('#reviewsSummary').textContent = 'Opiniones de clientas que ya compraron sus piezas.';
+    $('#reviewsList').innerHTML = S.admin
+      ? `<div class="empty" style="grid-column:1/-1"><i data-lucide="message-square-heart"></i><h3>Aún no hay reseñas publicadas</h3><p>Cuando marques un pedido como vendido, mándale a tu clienta el enlace de su pedido: ahí puede calificar sus piezas. Las revisas y publicas en Panel → Reseñas.</p></div>`
+      : `<div class="empty" style="grid-column:1/-1"><i data-lucide="message-square-heart"></i><h3>Muy pronto, sus opiniones</h3><p>Después de tu compra podrás calificar tus piezas desde el enlace de tu pedido.</p></div>`;
     $('#reviewsMore').hidden = true;
     return;
   }
